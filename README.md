@@ -44,7 +44,11 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | Xcode-Projekt (iPhone · iPad · Mac Catalyst) | ✅ baut auf allen drei |
 | Design-System + adaptive Navigation | ✅ steht |
 | CI-Screenshots aus dem Simulator | ✅ iPhone + iPad als Artefakt |
-| API-Clients (OFF, Open Prices, Overpass) | ⏳ als Nächstes |
+| Netzwerkschicht mit Fehler- und Wiederholungslogik | ✅ fertig, getestet |
+| Open-Food-Facts-Client (Suche + Barcode) | ✅ fertig, getestet |
+| Open-Prices-Client | ⏳ als Nächstes |
+| Overpass-Client (Filialen) | ⏳ danach |
+| Oberfläche an echte Daten anschließen | ⏳ danach |
 | SwiftData: Favoriten, Liste, Alarme | ⏳ danach |
 | Barcode-Scanner (VisionKit) | ⏳ danach |
 

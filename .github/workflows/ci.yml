@@ -164,7 +164,10 @@ jobs:
             --cellularBars 4 --wifiBars 3 || true
 
           xcrun simctl launch "$UDID" de.preisfuchs.app
-          sleep 8
+          # Ein frisch gebooteter Simulator wirft Systembanner ein
+          # ("Ready for Apple Intelligence"). Die verschwinden nach wenigen
+          # Sekunden von selbst - vorher aufgenommene Bilder waeren unbrauchbar.
+          sleep 22
           mkdir -p screenshots
           xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-Start.png"
           ls -la screenshots
