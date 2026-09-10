@@ -1,5 +1,18 @@
 import SwiftUI
 
+// MARK: - Layout-Hilfen
+
+extension View {
+
+    /// Freiraum am unteren Rand fuer die schwebende Tab-Leiste.
+    ///
+    /// Nur bei kompakter Breite noetig -- im breiten Layout gibt es keine
+    /// Tab-Leiste, dort waere der Abstand nur eine leere Flaeche.
+    func floatingTabBarInset(isCompact: Bool) -> some View {
+        padding(.bottom, isCompact ? 132 : Theme.Spacing.xxl)
+    }
+}
+
 // MARK: - Karten
 
 /// Die Grundkarte der App: leicht aufgehellte Flaeche mit feiner Kontur.
@@ -221,16 +234,20 @@ struct ActionTile: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                 Image(systemName: symbol)
                     .font(.system(size: 19, weight: .medium))
                     .foregroundStyle(isEnabled ? Theme.textPrimary : Theme.textTertiary)
+                Spacer(minLength: 0)
                 Text(title)
                     .font(.cardTitle)
                     .foregroundStyle(isEnabled ? Theme.textPrimary : Theme.textTertiary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
-            .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
-            .padding(Theme.Spacing.l)
+            .frame(maxWidth: .infinity, minHeight: 62, alignment: .topLeading)
+            .padding(.horizontal, Theme.Spacing.l)
+            .padding(.vertical, Theme.Spacing.m)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)

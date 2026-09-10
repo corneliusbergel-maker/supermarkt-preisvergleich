@@ -40,7 +40,7 @@ struct FavoritesView: View {
                 }
             }
             .padding(.horizontal, isWide ? Theme.Spacing.xl : Theme.Spacing.l)
-            .padding(.bottom, 120)
+            .floatingTabBarInset(isCompact: !isWide)
             .frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity)
         }

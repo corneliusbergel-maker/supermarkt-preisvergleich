@@ -21,7 +21,7 @@ struct HomeView: View {
                 dealsSection
             }
             .padding(.horizontal, isWide ? Theme.Spacing.xl : Theme.Spacing.l)
-            .padding(.bottom, 120)   // Platz fuer die schwebende Tab-Leiste
+            .floatingTabBarInset(isCompact: !isWide)
             .frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
