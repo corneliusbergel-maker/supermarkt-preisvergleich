@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		AA00000000000000000012 /* PriceCore in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000000011 /* PriceCore */; };
+		AA00000000000000000015 /* PriceData in Frameworks */ = {isa = PBXBuildFile; productRef = AA00000000000000000016 /* PriceData */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +26,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000012 /* PriceCore in Frameworks */,
+				AA00000000000000000015 /* PriceData in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,6 +79,7 @@
 			name = Preisfuchs;
 			packageProductDependencies = (
 				AA00000000000000000011 /* PriceCore */,
+				AA00000000000000000016 /* PriceData */,
 			);
 			productName = Preisfuchs;
 			productReference = AA00000000000000000004 /* Preisfuchs.app */;
@@ -299,6 +302,10 @@
 		AA00000000000000000011 /* PriceCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PriceCore;
+		};
+		AA00000000000000000016 /* PriceData */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PriceData;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

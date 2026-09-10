@@ -1,11 +1,13 @@
 // swift-tools-version: 5.9
 import PackageDescription
 
-/// PriceCore enthaelt die gesamte Rechen- und Vergleichslogik der App.
+/// Zwei Ebenen, bewusst getrennt:
 ///
-/// Bewusst OHNE UIKit/SwiftUI und ohne Fremdabhaengigkeiten, damit dieses
-/// Paket auf jedem Mac isoliert mit `swift test` geprueft werden kann --
-/// auch ohne iOS-Simulator und ohne Xcode-Projekt.
+/// - `PriceCore` -- reine Rechen- und Vergleichslogik, ohne Netzwerk.
+/// - `PriceData` -- die Anbindung an die offenen Datenquellen.
+///
+/// Beide ohne Fremdabhaengigkeiten und ohne UIKit/SwiftUI, damit sie auf jedem
+/// Mac mit `swift test` geprueft werden koennen -- auch ohne iOS-Simulator.
 let package = Package(
     name: "PriceCore",
     platforms: [
@@ -13,10 +15,13 @@ let package = Package(
         .macOS(.v13)
     ],
     products: [
-        .library(name: "PriceCore", targets: ["PriceCore"])
+        .library(name: "PriceCore", targets: ["PriceCore"]),
+        .library(name: "PriceData", targets: ["PriceData"])
     ],
     targets: [
         .target(name: "PriceCore"),
-        .testTarget(name: "PriceCoreTests", dependencies: ["PriceCore"])
+        .target(name: "PriceData", dependencies: ["PriceCore"]),
+        .testTarget(name: "PriceCoreTests", dependencies: ["PriceCore"]),
+        .testTarget(name: "PriceDataTests", dependencies: ["PriceData"])
     ]
 )
