@@ -46,8 +46,9 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | CI-Screenshots aus dem Simulator | ✅ iPhone + iPad als Artefakt |
 | Netzwerkschicht mit Fehler- und Wiederholungslogik | ✅ fertig, getestet |
 | Open-Food-Facts-Client (Suche + Barcode) | ✅ fertig, getestet |
-| Open-Prices-Client | ⏳ als Nächstes |
-| Overpass-Client (Filialen) | ⏳ danach |
+| Open-Prices-Client (Preise, Verlauf, Angebote) | ✅ fertig, getestet |
+| Overpass-Client (Filialen, serialisiert + gecacht) | ✅ fertig, getestet |
+| Standort (CoreLocation) | ⏳ als Nächstes |
 | Oberfläche an echte Daten anschließen | ⏳ danach |
 | SwiftData: Favoriten, Liste, Alarme | ⏳ danach |
 | Barcode-Scanner (VisionKit) | ⏳ danach |
