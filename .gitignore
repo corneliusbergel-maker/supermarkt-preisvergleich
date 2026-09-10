@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Signing / Geheimnisse - duerfen nie ins Repository
+*.mobileprovision
+*.p12
+*.certSigningRequest
+*.p8
+AuthKey_*.p8
+
+# Build-Ergebnisse
+*.ipa
+*.dSYM.zip
+*.app
+
+# Windows
+Thumbs.db
+desktop.ini

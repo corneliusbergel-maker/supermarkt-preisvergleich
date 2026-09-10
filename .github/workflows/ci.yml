@@ -1,0 +1,67 @@
+name: CI
+
+# Baut und testet auf einem echten macOS-Rechner bei GitHub.
+# Fuer oeffentliche Repositories ist das kostenlos und unbegrenzt
+# (Standard-Runner). Siehe KOSTEN.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # erlaubt manuellen Start ueber die GitHub-Oberflaeche
+
+# Laeuft ein neuer Push, wird der vorherige Lauf abgebrochen.
+# Spart Laufzeit und haelt die Rueckmeldung schnell.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  price-core:
+    name: PriceCore - Logik & Tests
+    runs-on: macos-latest
+
+    steps:
+      - name: Quellcode holen
+        uses: actions/checkout@v4
+
+      - name: Werkzeugversionen protokollieren
+        run: |
+          echo "### Umgebung" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          swift --version 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          xcodebuild -version 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # Beschleunigt Folgelaeufe. Beim ersten Lauf gibt es noch nichts zu holen.
+      - name: Build-Zwischenstand zwischenspeichern
+        uses: actions/cache@v4
+        with:
+          path: Packages/PriceCore/.build
+          key: swiftpm-${{ runner.os }}-${{ hashFiles('Packages/PriceCore/Package.swift') }}
+          restore-keys: swiftpm-${{ runner.os }}-
+
+      - name: Kompilieren
+        working-directory: Packages/PriceCore
+        run: swift build
+
+      - name: Tests ausfuehren
+        working-directory: Packages/PriceCore
+        run: swift test
+
+      - name: Ergebnis zusammenfassen
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Alle PriceCore-Tests sind gruen." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ Fehler - siehe Protokoll des Schritts oben." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+# Sobald das Xcode-App-Projekt existiert, kommen hier weitere Jobs dazu -
+# einer je Geraeteart, weil die App auf iPhone, iPad und Mac laufen soll:
+#   - iPhone:  xcodebuild -destination 'platform=iOS Simulator,name=iPhone 16'
+#   - iPad:    xcodebuild -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M4)'
+#   - Mac:     xcodebuild -destination 'platform=macOS,variant=Mac Catalyst'
+# Jeder Job startet den Simulator, oeffnet die App und laedt Screenshots als
+# Artefakt hoch. So sehen wir alle drei Layouts, ohne einen Mac zu besitzen.
