@@ -97,6 +97,76 @@ jobs:
             echo "❌ ${{ matrix.name }} schlaegt fehl." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-# Sobald die Builds stabil gruen sind, kommt ein Screenshot-Job dazu: Simulator
-# starten, App oeffnen, Bildschirmfotos als Artefakt hochladen. Dann sind alle
-# drei Layouts sichtbar, ohne einen Mac zu besitzen.
+  screenshots:
+    name: Screenshots (${{ matrix.device }})
+    runs-on: macos-latest
+    needs: app
+    strategy:
+      fail-fast: false
+      matrix:
+        # iPhone zeigt das kompakte Layout mit Tab-Leiste,
+        # iPad das breite mit Seitenleiste.
+        device: [iPhone, iPad]
+
+    steps:
+      - name: Quellcode holen
+        uses: actions/checkout@v7
+
+      - name: Simulator waehlen und starten
+        id: sim
+        run: |
+          set -euo pipefail
+          # Geraet nicht fest verdrahten - die verfuegbaren Modelle aendern
+          # sich mit jeder Xcode-Version. Stattdessen das erste passende nehmen.
+          UDID=$(xcrun simctl list devices available \
+            | grep -E "^\s+${{ matrix.device }}" \
+            | head -1 \
+            | grep -oE "[0-9A-Fa-f-]{36}")
+          if [ -z "$UDID" ]; then
+            echo "Kein ${{ matrix.device }}-Simulator gefunden:"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Gewaehlt: $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Bauen und installieren
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Preisfuchs.xcodeproj \
+            -scheme Preisfuchs \
+            -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -30
+          APP=$(find build/Build/Products/Debug-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          echo "App: $APP"
+          xcrun simctl install "${{ steps.sim.outputs.udid }}" "$APP"
+
+      - name: Aufnehmen
+        run: |
+          set -euo pipefail
+          UDID="${{ steps.sim.outputs.udid }}"
+          # Statusleiste festsetzen, damit die Bilder vergleichbar bleiben.
+          xcrun simctl status_bar "$UDID" override \
+            --time "9:41" --batteryState charged --batteryLevel 100 \
+            --cellularBars 4 --wifiBars 3 || true
+
+          xcrun simctl launch "$UDID" de.preisfuchs.app
+          sleep 8
+          mkdir -p screenshots
+          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-Start.png"
+          ls -la screenshots
+
+      - name: Hochladen
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots-${{ matrix.device }}
+          path: screenshots/
+          if-no-files-found: warn
