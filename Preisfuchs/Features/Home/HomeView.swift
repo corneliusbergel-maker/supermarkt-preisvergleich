@@ -135,4 +135,5 @@ struct HomeView: View {
 
 #Preview {
     RootView()
+        .environment(AppEnvironment())
 }

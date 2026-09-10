@@ -2,9 +2,14 @@ import SwiftUI
 
 @main
 struct PreisfuchsApp: App {
+
+    /// Eine Umgebung fuer die ganze App, von hier nach unten gereicht.
+    @State private var appEnvironment = AppEnvironment()
+
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environment(appEnvironment)
                 .preferredColorScheme(.dark)
         }
     }

@@ -1,31 +1,19 @@
 import SwiftUI
+import PriceCore
 
 struct SettingsView: View {
 
-    /// Auswahl der Handelsketten (Anforderung #29).
-    /// Noch ohne Speicherung -- die Anbindung an SwiftData folgt.
-    @State private var enabledRetailers: Set<String> = [
-        "REWE", "EDEKA", "Kaufland", "Lidl", "Aldi Süd", "Aldi Nord"
-    ]
-
-    /// Maximale Entfernung in Metern, `nil` heisst unbegrenzt (Anforderung #30).
-    @State private var maxDistanceMeters: Double? = 5_000
-
-    private let retailers = [
-        "REWE", "EDEKA", "Kaufland", "Lidl", "Aldi Süd", "Aldi Nord",
-        "Penny", "Netto Marken-Discount", "Norma"
-    ]
-
-    private let distanceOptions: [(label: String, meters: Double?)] = [
-        ("1 km", 1_000), ("2 km", 2_000), ("5 km", 5_000),
-        ("10 km", 10_000), ("25 km", 25_000), ("Unbegrenzt", nil)
-    ]
+    @Environment(AppEnvironment.self) private var appEnvironment
 
     var body: some View {
+        @Bindable var settings = appEnvironment.settings
+
         List {
-            distanceSection
+            distanceSection(settings)
+            sortSection(settings)
             retailerSection
             locationSection
+            travelCostSection(settings)
             attributionSection
             aboutSection
         }
@@ -34,15 +22,14 @@ struct SettingsView: View {
         .navigationTitle("Einstellungen")
     }
 
-    // MARK: - Entfernung
+    // MARK: - Umkreis (#30)
 
-    private var distanceSection: some View {
-        Section {
-            Picker("Maximale Entfernung", selection: Binding(
-                get: { maxDistanceMeters },
-                set: { maxDistanceMeters = $0 }
-            )) {
-                ForEach(distanceOptions, id: \.label) { option in
+    private func distanceSection(_ settings: AppSettings) -> some View {
+        @Bindable var settings = settings
+
+        return Section {
+            Picker("Maximale Entfernung", selection: $settings.maxDistanceMeters) {
+                ForEach(AppSettings.distanceOptions, id: \.label) { option in
                     Text(option.label).tag(option.meters)
                 }
             }
@@ -55,44 +42,107 @@ struct SettingsView: View {
         .listRowBackground(Theme.surface)
     }
 
-    // MARK: - Händler
+    // MARK: - Sortierung (#31)
+
+    private func sortSection(_ settings: AppSettings) -> some View {
+        @Bindable var settings = settings
+
+        return Section {
+            Picker("Sortieren nach", selection: $settings.sortCriterion) {
+                ForEach(PriceSortCriterion.allCases, id: \.self) { criterion in
+                    Text(criterion.label).tag(criterion)
+                }
+            }
+        } header: {
+            Text("Preisvergleich")
+        }
+        .listRowBackground(Theme.surface)
+    }
+
+    // MARK: - Händler (#29)
 
     private var retailerSection: some View {
         Section {
-            ForEach(retailers, id: \.self) { retailer in
+            ForEach(AppSettings.selectableRetailers, id: \.self) { retailer in
                 Toggle(retailer, isOn: Binding(
-                    get: { enabledRetailers.contains(retailer) },
-                    set: { isOn in
-                        if isOn { enabledRetailers.insert(retailer) }
-                        else { enabledRetailers.remove(retailer) }
-                    }
+                    get: { appEnvironment.settings.isEnabled(retailerNamed: retailer) },
+                    set: { _ in appEnvironment.settings.toggle(retailerNamed: retailer) }
                 ))
             }
         } header: {
             Text("Berücksichtigte Märkte")
         } footer: {
-            Text("Abgewählte Ketten fließen nicht in den Preisvergleich ein.")
+            Text("Abgewählte Ketten fließen nicht in den Preisvergleich ein. "
+                 + "Unterschiedliche Schreibweisen derselben Kette – etwa „Rewe“ "
+                 + "und „REWE“ – werden dabei zusammengeführt.")
         }
         .listRowBackground(Theme.surface)
     }
 
-    // MARK: - Standort
+    // MARK: - Standort (#14, #34)
 
     private var locationSection: some View {
         Section {
-            LabeledContent("Standort") {
-                Text(Platform.prefersManualLocation ? "Manuell wählen" : "Noch nicht freigegeben")
+            LabeledContent("Bezugspunkt") {
+                Text(appEnvironment.activeLocationDescription ?? "Nicht gesetzt")
                     .foregroundStyle(Theme.textSecondary)
+            }
+
+            switch appEnvironment.location.authorization {
+            case .notDetermined:
+                Button("Standort freigeben") {
+                    appEnvironment.location.requestPermission()
+                }
+            case .authorized:
+                Button("Standort aktualisieren") {
+                    appEnvironment.location.updateLocationOnce()
+                }
+                .disabled(appEnvironment.location.isLocating)
+            case .denied, .restricted:
+                Label("Standortzugriff nicht erlaubt", systemImage: "location.slash")
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+            if let error = appEnvironment.location.lastError {
+                Text(error)
+                    .font(.cardBody)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+            if appEnvironment.settings.manualPlaceName != nil {
+                Button("Gewählten Ort entfernen", role: .destructive) {
+                    appEnvironment.settings.clearManualPlace()
+                }
             }
         } header: {
             Text("Standort")
         } footer: {
-            Text(Platform.prefersManualLocation
-                 ? "Auf dem Mac ist die Ortung nur WLAN-basiert und ungenau. "
-                 + "Die manuelle Ortswahl liefert hier bessere Ergebnisse."
-                 : "Der Standort wird ausschließlich zur Entfernungsberechnung genutzt "
-                 + "und verlässt das Gerät nicht. Du kannst stattdessen auch einen Ort "
-                 + "von Hand wählen.")
+            Text(appEnvironment.location.authorization.explanation)
+        }
+        .listRowBackground(Theme.surface)
+    }
+
+    // MARK: - Fahrtkosten
+
+    private func travelCostSection(_ settings: AppSettings) -> some View {
+        Section {
+            LabeledContent("Angenommene Fahrtkosten") {
+                Text(Money(amount: settings.costPerKilometer).formatted() + "/km")
+                    .foregroundStyle(Theme.textSecondary)
+                    .monospacedDigit()
+            }
+            Stepper("Anpassen",
+                    value: Binding(
+                        get: { NSDecimalNumber(decimal: settings.costPerKilometer).doubleValue },
+                        set: { settings.costPerKilometer = Decimal($0) }
+                    ),
+                    in: 0...2, step: 0.05)
+        } header: {
+            Text("Weg einrechnen")
+        } footer: {
+            Text("Diese Zahl ist eine Annahme, kein Messwert. Sie geht in „Beste "
+                 + "Kombination aus Preis und Weg“ ein und wird beim Ergebnis genannt. "
+                 + "Gerechnet wird mit Hin- und Rückweg je Markt.")
         }
         .listRowBackground(Theme.surface)
     }
