@@ -80,9 +80,10 @@ struct RootView: View {
 
     private var regularLayout: some View {
         NavigationSplitView {
-            List(Destination.allCases, selection: $selection) { destination in
-                NavigationLink(value: destination) {
+            List(selection: sidebarSelection) {
+                ForEach(Destination.allCases) { destination in
                     Label(destination.title, systemImage: destination.symbol)
+                        .tag(destination)
                 }
             }
             .navigationTitle("Preisfuchs")
@@ -93,6 +94,18 @@ struct RootView: View {
                 screen(for: selection)
             }
         }
+    }
+
+    /// Die Seitenleiste braucht eine optionale Auswahl -- auf dem iPad kann
+    /// die Auswahl leer sein, waehrend die App intern immer einen Bereich
+    /// anzeigt. Eine Leerauswahl setzt den Bereich deshalb nicht zurueck.
+    private var sidebarSelection: Binding<Destination?> {
+        Binding(
+            get: { selection },
+            set: { newValue in
+                if let newValue { selection = newValue }
+            }
+        )
     }
 
     @ViewBuilder
