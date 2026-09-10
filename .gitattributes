@@ -1,0 +1,7 @@
+# Zeilenenden im Repository immer LF - der CI-Runner ist ein Mac.
+* text=auto eol=lf
+
+# Binaerdateien nicht anfassen
+*.png binary
+*.jpg binary
+*.pdf binary
