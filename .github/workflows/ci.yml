@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Quellcode holen
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Werkzeugversionen protokollieren
         run: |
@@ -35,7 +35,7 @@ jobs:
 
       # Beschleunigt Folgelaeufe. Beim ersten Lauf gibt es noch nichts zu holen.
       - name: Build-Zwischenstand zwischenspeichern
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: Packages/PriceCore/.build
           key: swiftpm-${{ runner.os }}-${{ hashFiles('Packages/PriceCore/Package.swift') }}

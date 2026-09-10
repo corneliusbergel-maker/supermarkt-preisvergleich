@@ -1,5 +1,7 @@
 # Supermarkt-Preisvergleich (iPhone · iPad · Mac)
 
+[![CI](https://github.com/corneliusbergel-maker/supermarkt-preisvergleich/actions/workflows/ci.yml/badge.svg)](https://github.com/corneliusbergel-maker/supermarkt-preisvergleich/actions/workflows/ci.yml)
+
 Preisvergleich für deutsche Supermärkte — mit **echten** Daten aus offenen
 Quellen, ohne erfundene Preise und ohne laufende Kosten.
 
@@ -37,8 +39,9 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | `PriceCore` — Geld, Mengen, Grundpreis | ✅ fertig, getestet |
 | `PriceCore` — Produkt-Matching | ✅ fertig, getestet |
 | `PriceCore` — Preisvergleich, Confidence, Umweg-Bewertung | ✅ fertig, getestet |
-| `PriceCore` — Einkaufskorb-Optimierung | ⏳ als Nächstes |
-| Xcode-App-Projekt, Design-System, Oberfläche | ⏳ danach |
+| `PriceCore` — Einkaufskorb-Optimierung | ✅ fertig, getestet |
+| CI auf macOS-Runner (kostenlos, öffentliches Repo) | ✅ läuft grün |
+| Xcode-App-Projekt, Design-System, Oberfläche | ⏳ als Nächstes |
 | API-Clients (OFF, Open Prices, Overpass) | ⏳ danach |
 
 ---
