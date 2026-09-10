@@ -218,44 +218,69 @@ public enum BasketOptimizer {
         guard maxStores >= 1 else { return nil }
         if maxStores == 1 { return bestSingleStore(items) }
 
+        return searchCombinations(items,
+                                  maxStores: maxStores,
+                                  strategy: .atMostStores(maxStores)) { $0.total.amount }
+    }
+
+    /// Durchsucht Marktkombinationen und waehlt die nach `score` beste aus.
+    ///
+    /// Der Bewertungsmassstab wird von aussen hereingereicht, weil sich
+    /// "guenstigster Warenwert" und "guenstigster Gesamtaufwand inklusive
+    /// Fahrt" zu **unterschiedlichen** Kombinationen fuehren koennen. Wer
+    /// erst nach Preis auswaehlt und danach die Fahrtkosten draufrechnet,
+    /// findet den nahen, etwas teureren Markt nie.
+    private static func searchCombinations(_ items: [BasketItem],
+                                           maxStores: Int,
+                                           strategy: BasketPlan.Strategy,
+                                           score: (BasketPlan) -> Decimal) -> BasketPlan? {
         let plannable = items.filter { !$0.plannableOffers.isEmpty }
         let missing = items.filter { $0.plannableOffers.isEmpty }
         guard !plannable.isEmpty else { return nil }
 
         let candidates = topCandidateKeys(in: plannable)
         var bestPlan: BasketPlan?
+        var bestScore: Decimal?
 
         for combination in combinations(of: candidates, upTo: min(maxStores, candidates.count)) {
-            let allowed = Set(combination)
-            var selections: [(BasketItem, PriceOffer)] = []
-            var complete = true
+            guard let plan = plan(for: plannable,
+                                  allowedKeys: Set(combination),
+                                  missing: missing,
+                                  strategy: strategy) else { continue }
 
-            for item in plannable {
-                let candidateOffers = item.plannableOffers.filter {
-                    guard let key = locationKey(for: $0) else { return false }
-                    return allowed.contains(key)
-                }
-                guard let best = candidateOffers.min(by: { $0.price.amount < $1.price.amount }) else {
-                    complete = false
-                    break
-                }
-                selections.append((item, best))
-            }
-
-            guard complete,
-                  let plan = makePlan(strategy: .atMostStores(maxStores),
-                                      selections: selections,
-                                      missing: missing) else { continue }
-
-            if bestPlan == nil
-                || plan.total.amount < bestPlan!.total.amount
-                || (plan.total.amount == bestPlan!.total.amount
-                    && plan.storeCount < bestPlan!.storeCount) {
+            let value = score(plan)
+            if bestScore == nil
+                || value < bestScore!
+                || (value == bestScore! && plan.storeCount < bestPlan!.storeCount) {
                 bestPlan = plan
+                bestScore = value
             }
         }
 
         return bestPlan
+    }
+
+    /// Plant die Liste unter der Auflage, nur die erlaubten Maerkte zu nutzen.
+    /// Gibt `nil` zurueck, sobald ein Posten dort nirgends einen Preis hat --
+    /// eine Kombination, die die Liste nicht abdeckt, ist keine Loesung.
+    private static func plan(for items: [BasketItem],
+                             allowedKeys: Set<String>,
+                             missing: [BasketItem],
+                             strategy: BasketPlan.Strategy) -> BasketPlan? {
+        var selections: [(BasketItem, PriceOffer)] = []
+
+        for item in items {
+            let candidateOffers = item.plannableOffers.filter {
+                guard let key = locationKey(for: $0) else { return false }
+                return allowedKeys.contains(key)
+            }
+            guard let best = candidateOffers.min(by: { $0.price.amount < $1.price.amount }) else {
+                return nil
+            }
+            selections.append((item, best))
+        }
+
+        return makePlan(strategy: strategy, selections: selections, missing: missing)
     }
 
     // MARK: - Preis und Weg zusammen
@@ -271,16 +296,18 @@ public enum BasketOptimizer {
                                  maxStores: Int = 3,
                                  costPerKilometer: Money? = nil) -> BasketPlan? {
         let rate = costPerKilometer ?? PriceComparator.defaultCostPerKilometer
+        let value: (BasketPlan) -> Decimal = { effectiveTotal(of: $0, rate: rate) }
 
-        let plans = (1...max(1, maxStores)).compactMap { count -> BasketPlan? in
-            count == 1 ? bestSingleStore(items) : bestCombination(items, maxStores: count)
-        }
-        guard !plans.isEmpty else { return nil }
+        // Die Kombinationssuche arbeitet auf einer gekappten Marktliste
+        // (siehe `maximumCandidateStores`). Der exakt ermittelte beste
+        // Einzelmarkt kommt deshalb als zusaetzlicher Kandidat dazu, damit die
+        // Kappung nie die naheliegendste Loesung verschluckt.
+        let candidates = [
+            searchCombinations(items, maxStores: max(1, maxStores), strategy: .bestValue, score: value),
+            bestSingleStore(items)
+        ].compactMap { $0 }
 
-        let best = plans.min { lhs, rhs in
-            effectiveTotal(of: lhs, rate: rate) < effectiveTotal(of: rhs, rate: rate)
-        }
-        guard let best else { return nil }
+        guard let best = candidates.min(by: { value($0) < value($1) }) else { return nil }
 
         return BasketPlan(strategy: .bestValue,
                           baskets: best.baskets,
