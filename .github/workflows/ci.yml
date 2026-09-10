@@ -58,10 +58,45 @@ jobs:
             echo "❌ Fehler - siehe Protokoll des Schritts oben." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-# Sobald das Xcode-App-Projekt existiert, kommen hier weitere Jobs dazu -
-# einer je Geraeteart, weil die App auf iPhone, iPad und Mac laufen soll:
-#   - iPhone:  xcodebuild -destination 'platform=iOS Simulator,name=iPhone 16'
-#   - iPad:    xcodebuild -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M4)'
-#   - Mac:     xcodebuild -destination 'platform=macOS,variant=Mac Catalyst'
-# Jeder Job startet den Simulator, oeffnet die App und laedt Screenshots als
-# Artefakt hoch. So sehen wir alle drei Layouts, ohne einen Mac zu besitzen.
+  app:
+    name: App bauen (${{ matrix.name }})
+    runs-on: macos-latest
+    strategy:
+      # Ein Fehler auf einer Plattform soll die anderen nicht verdecken -
+      # wir wollen alle Fehler auf einmal sehen, nicht nacheinander.
+      fail-fast: false
+      matrix:
+        include:
+          - name: iOS
+            destination: generic/platform=iOS Simulator
+          - name: Mac Catalyst
+            destination: platform=macOS,variant=Mac Catalyst
+
+    steps:
+      - name: Quellcode holen
+        uses: actions/checkout@v7
+
+      - name: Bauen
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Preisfuchs.xcodeproj \
+            -scheme Preisfuchs \
+            -configuration Debug \
+            -destination '${{ matrix.destination }}' \
+            -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -60
+
+      - name: Ergebnis zusammenfassen
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ ${{ matrix.name }} baut." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ ${{ matrix.name }} schlaegt fehl." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+# Sobald die Builds stabil gruen sind, kommt ein Screenshot-Job dazu: Simulator
+# starten, App oeffnen, Bildschirmfotos als Artefakt hochladen. Dann sind alle
+# drei Layouts sichtbar, ohne einen Mac zu besitzen.
