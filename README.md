@@ -41,8 +41,12 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | `PriceCore` — Preisvergleich, Confidence, Umweg-Bewertung | ✅ fertig, getestet |
 | `PriceCore` — Einkaufskorb-Optimierung | ✅ fertig, getestet |
 | CI auf macOS-Runner (kostenlos, öffentliches Repo) | ✅ läuft grün |
-| Xcode-App-Projekt, Design-System, Oberfläche | ⏳ als Nächstes |
-| API-Clients (OFF, Open Prices, Overpass) | ⏳ danach |
+| Xcode-Projekt (iPhone · iPad · Mac Catalyst) | ✅ baut auf allen drei |
+| Design-System + adaptive Navigation | ✅ steht |
+| CI-Screenshots aus dem Simulator | ✅ iPhone + iPad als Artefakt |
+| API-Clients (OFF, Open Prices, Overpass) | ⏳ als Nächstes |
+| SwiftData: Favoriten, Liste, Alarme | ⏳ danach |
+| Barcode-Scanner (VisionKit) | ⏳ danach |
 
 ---
 
@@ -100,11 +104,36 @@ Kompilier-Check.
 
 ---
 
-## Build (Mac erforderlich)
+## Ohne Mac entwickeln — so läuft es hier
 
-Sobald das Xcode-Projekt steht, kommt hier die vollständige Anleitung für
-Öffnen, Signing und Installation aufs iPhone. Bis dahin die drei Wege im
-Überblick:
+Das Projekt wird auf Windows geschrieben und auf einem **kostenlosen
+macOS-Runner bei GitHub Actions** gebaut, getestet und im Simulator
+fotografiert. Für öffentliche Repositories ist das unbegrenzt kostenlos.
+
+Bei jedem Push laufen:
+
+| Job | Was er prüft |
+|---|---|
+| `PriceCore – Logik & Tests` | `swift build` + `swift test` |
+| `App bauen (iOS)` | `xcodebuild` gegen den iOS-Simulator |
+| `App bauen (Mac Catalyst)` | `xcodebuild` für macOS |
+| `Screenshots (iPhone/iPad)` | Simulator starten, App öffnen, Bild aufnehmen |
+
+Die Screenshots liegen als Artefakt am jeweiligen Lauf unter
+**Actions → Lauf auswählen → Artifacts**.
+
+Was damit **nicht** geht: die App auf ein echtes iPhone bringen. Dafür braucht
+es eine Signatur von Apple und damit das Apple Developer Program (99 €/Jahr).
+Siehe [KOSTEN.md](KOSTEN.md).
+
+## Build auf einem eigenen Mac
+
+Projekt in Xcode 16 oder neuer öffnen (`Preisfuchs.xcodeproj`), Schema
+`Preisfuchs` wählen, bauen. Es sind keine Abhängigkeiten zu holen — das
+Projekt nutzt ausschließlich Apple-Frameworks und das lokale Paket
+`Packages/PriceCore`.
+
+Für die Installation auf einem Gerät gibt es drei Wege:
 
 | Weg | Voraussetzung | Kosten |
 |---|---|---|

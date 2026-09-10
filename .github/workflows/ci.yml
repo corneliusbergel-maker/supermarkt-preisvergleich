@@ -7,6 +7,12 @@ name: CI
 on:
   push:
     branches: [main]
+    # Reine Dokumentationsaenderungen loesen keinen Lauf aus. Der
+    # Screenshot-Job belegt rund sechs Minuten Runner-Zeit - die soll nicht
+    # fuer eine Textkorrektur draufgehen.
+    paths-ignore:
+      - '**.md'
+      - 'Referenzen/**'
   pull_request:
   workflow_dispatch:        # erlaubt manuellen Start ueber die GitHub-Oberflaeche
 

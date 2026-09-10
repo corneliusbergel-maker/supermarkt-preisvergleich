@@ -133,12 +133,16 @@ struct PillTabBar: View {
             }
         }
         .padding(Theme.Spacing.s)
-        // Dunkle Schicht vor dem Blur: ohne sie faerbt die Cyan-Kapsel des
-        // aktiven Eintrags die gesamte Leiste gruenlich ein.
-        .background(Theme.ink.opacity(0.55), in: Capsule())
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().strokeBorder(Theme.surfaceStroke, lineWidth: 1))
-        .shadow(color: .black.opacity(0.5), radius: 20, y: 8)
+        // Hintergrund, Kontur und Schatten liegen bewusst auf der Form und
+        // nicht auf der Leiste selbst. Ein .shadow() auf dem Inhalt wuerde
+        // die Cyan-Kapsel des aktiven Eintrags mit einfaerben und die ganze
+        // Leiste gruenlich ueberstrahlen.
+        .background {
+            Capsule()
+                .fill(Color(red: 0.075, green: 0.075, blue: 0.088))
+                .overlay(Capsule().strokeBorder(Theme.surfaceStroke, lineWidth: 1))
+                .shadow(color: .black.opacity(0.55), radius: 22, y: 10)
+        }
     }
 
     private func item(for destination: Destination) -> some View {
