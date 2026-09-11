@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 @main
@@ -12,6 +13,13 @@ struct PreisfuchsApp: App {
                 .environment(appEnvironment)
                 .preferredColorScheme(.dark)
         }
+        // Favoriten, Einkaufsliste und Preisalarme liegen lokal auf dem
+        // Geraet. Es gibt keinen Server, auf den sie synchronisiert wuerden.
+        .modelContainer(for: [
+            FavoriteProduct.self,
+            ShoppingListEntry.self,
+            PriceAlert.self
+        ])
     }
 }
 

@@ -1,4 +1,5 @@
 import Charts
+import SwiftData
 import SwiftUI
 import PriceCore
 
@@ -6,6 +7,12 @@ struct ProductDetailView: View {
 
     @Environment(AppEnvironment.self) private var appEnvironment
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.modelContext) private var context
+
+    // Beide Listen sind klein; sie ganz zu laden und im Speicher zu pruefen
+    // ist einfacher und verlaesslicher als ein Praedikat mit eingefangenem Wert.
+    @Query private var favorites: [FavoriteProduct]
+    @Query private var listEntries: [ShoppingListEntry]
 
     @State private var model: ProductDetailViewModel
     @State private var routeTarget: Store?
@@ -16,10 +23,19 @@ struct ProductDetailView: View {
         _model = State(initialValue: ProductDetailViewModel(product: product))
     }
 
+    private var isFavorite: Bool {
+        favorites.contains { $0.productID == model.displayProduct.id }
+    }
+
+    private var isOnShoppingList: Bool {
+        listEntries.contains { $0.productID == model.displayProduct.id }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 header
+                actionRow
                 priceSection
             }
             .padding(.horizontal, isWide ? Theme.Spacing.xl : Theme.Spacing.l)
@@ -78,6 +94,69 @@ struct ProductDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Aktionen
+
+    private var actionRow: some View {
+        HStack(spacing: Theme.Spacing.m) {
+            actionButton(
+                title: isFavorite ? "Favorit" : "Favorisieren",
+                symbol: isFavorite ? "star.fill" : "star",
+                isActive: isFavorite,
+                action: toggleFavorite
+            )
+
+            actionButton(
+                title: isOnShoppingList ? "Auf der Liste" : "Zur Liste",
+                symbol: isOnShoppingList ? "checkmark.circle.fill" : "plus.circle",
+                isActive: isOnShoppingList,
+                action: toggleShoppingList
+            )
+        }
+    }
+
+    private func actionButton(title: String,
+                              symbol: String,
+                              isActive: Bool,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .font(.cardTitle)
+                .foregroundStyle(isActive ? Theme.ink : Theme.textPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Theme.Spacing.m)
+                .background {
+                    if isActive {
+                        Capsule().fill(Theme.accentFill)
+                    } else {
+                        Capsule()
+                            .fill(Theme.surface)
+                            .overlay(Capsule().strokeBorder(Theme.surfaceStroke, lineWidth: 1))
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func toggleFavorite() {
+        let product = model.displayProduct
+        if let existing = favorites.first(where: { $0.productID == product.id }) {
+            context.delete(existing)
+        } else {
+            context.insert(FavoriteProduct(product: product))
+        }
+        try? context.save()
+    }
+
+    private func toggleShoppingList() {
+        let product = model.displayProduct
+        if let existing = listEntries.first(where: { $0.productID == product.id }) {
+            context.delete(existing)
+        } else {
+            context.insert(ShoppingListEntry(product: product))
+        }
+        try? context.save()
     }
 
     // MARK: - Preise
