@@ -182,6 +182,17 @@ jobs:
           sleep 15
           xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-2-Suche.png"
 
+          # 3) Produktdetail mit ECHTEM Preisvergleich.
+          # Nutella 400 g, EAN 3017620422003 - dazu liegen in Open Prices 165
+          # belegte Preise an 110 Standorten vor, also genug fuer Vergleich
+          # und Verlauf.
+          xcrun simctl terminate "$UDID" de.preisfuchs.app || true
+          sleep 2
+          xcrun simctl launch "$UDID" de.preisfuchs.app \
+            -uiTab search -uiBarcode 3017620422003
+          sleep 18
+          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-3-Produkt.png"
+
           ls -la screenshots
 
       - name: Hochladen

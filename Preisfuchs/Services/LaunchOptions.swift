@@ -34,6 +34,13 @@ enum LaunchOptions {
         value(for: "-uiQuery")
     }
 
+    /// Barcode, dessen Detailseite beim Start geöffnet wird.
+    ///
+    /// Das Produkt wird über die echte API geladen, die Preise ebenso.
+    static var initialBarcode: String? {
+        value(for: "-uiBarcode").map { $0.filter(\.isNumber) }.flatMap { $0.isEmpty ? nil : $0 }
+    }
+
     private static func value(for key: String) -> String? {
         let arguments = ProcessInfo.processInfo.arguments
         guard let index = arguments.firstIndex(of: key),
@@ -44,5 +51,6 @@ enum LaunchOptions {
     #else
     static var initialDestination: Destination? { nil }
     static var initialSearchQuery: String? { nil }
+    static var initialBarcode: String? { nil }
     #endif
 }

@@ -47,7 +47,10 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
 struct RootView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(AppEnvironment.self) private var appEnvironment
+
     @State private var selection: Destination = LaunchOptions.initialDestination ?? .home
+    @State private var path = NavigationPath()
 
     var body: some View {
         Group {
@@ -59,13 +62,21 @@ struct RootView: View {
         }
         .background(Theme.ink.ignoresSafeArea())
         .tint(Theme.accent)
+        // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
+        // Produkt und Preise kommen aus den echten APIs.
+        .task {
+            guard let barcode = LaunchOptions.initialBarcode,
+                  let product = try? await appEnvironment.products.product(barcode: barcode)
+            else { return }
+            path.append(product)
+        }
     }
 
     // MARK: - iPhone hochkant
 
     private var compactLayout: some View {
         ZStack(alignment: .bottom) {
-            NavigationStack {
+            NavigationStack(path: $path) {
                 screen(for: selection)
                     .navigationBarTitleDisplayMode(.inline)
             }
@@ -90,7 +101,7 @@ struct RootView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.ink)
         } detail: {
-            NavigationStack {
+            NavigationStack(path: $path) {
                 screen(for: selection)
             }
         }
