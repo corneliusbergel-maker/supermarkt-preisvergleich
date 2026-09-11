@@ -48,10 +48,12 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | Open-Food-Facts-Client (Suche + Barcode) | ✅ fertig, getestet |
 | Open-Prices-Client (Preise, Verlauf, Angebote) | ✅ fertig, getestet |
 | Overpass-Client (Filialen, serialisiert + gecacht) | ✅ fertig, getestet |
-| Standort (CoreLocation) | ⏳ als Nächstes |
-| Oberfläche an echte Daten anschließen | ⏳ danach |
-| SwiftData: Favoriten, Liste, Alarme | ⏳ danach |
+| Standort (CoreLocation), Einstellungen | ✅ fertig |
+| **Produktsuche mit echten Daten** | ✅ läuft |
+| **Produktdetail: Preisvergleich, Verlauf, Route** | ✅ läuft |
+| SwiftData: Favoriten, Liste, Alarme | ⏳ als Nächstes |
 | Barcode-Scanner (VisionKit) | ⏳ danach |
+| Einkaufslisten-Optimierung in der Oberfläche | ⏳ danach |
 
 ---
 
