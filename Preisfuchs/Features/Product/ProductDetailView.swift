@@ -28,7 +28,7 @@ struct ProductDetailView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Theme.ink)
-        .navigationTitle(model.product.name)
+        .navigationTitle(model.displayProduct.name)
         .navigationBarTitleDisplayMode(.inline)
         .task { await model.load(using: appEnvironment) }
         .sheet(item: $routeTarget) { store in
@@ -41,7 +41,7 @@ struct ProductDetailView: View {
     private var header: some View {
         GlassCard {
             HStack(alignment: .top, spacing: Theme.Spacing.l) {
-                AsyncImage(url: model.product.imageURL) { phase in
+                AsyncImage(url: model.displayProduct.imageURL) { phase in
                     switch phase {
                     case .success(let image): image.resizable().scaledToFit()
                     default:
@@ -55,17 +55,17 @@ struct ProductDetailView: View {
                             in: RoundedRectangle(cornerRadius: 16, style: .continuous))
 
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                    if let brand = model.product.brand?.split(separator: ",").first {
+                    if let brand = model.displayProduct.brand?.split(separator: ",").first {
                         Text(brand.trimmingCharacters(in: .whitespaces))
                             .font(.caption)
                             .foregroundStyle(Theme.accent)
                     }
-                    Text(model.product.name)
+                    Text(model.displayProduct.name)
                         .font(.system(size: 20, weight: .semibold, design: .rounded))
                         .foregroundStyle(Theme.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    if let quantity = model.product.quantity {
+                    if let quantity = model.displayProduct.quantity {
                         Text(quantity.formatted())
                             .font(.cardBody)
                             .foregroundStyle(Theme.textSecondary)

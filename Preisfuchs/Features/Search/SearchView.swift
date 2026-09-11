@@ -21,7 +21,12 @@ struct SearchView: View {
         }
         .background(Theme.ink)
         .navigationTitle("Suche")
-        .searchable(text: $model.query, prompt: "Produkt suchen")
+        // Ausdrücklich oben verankert. Ohne Angabe legt iOS das Suchfeld an
+        // den unteren Rand – dort sitzt aber unsere schwebende Tab-Leiste,
+        // und beide überdecken sich.
+        .searchable(text: $model.query,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "Produkt suchen")
         .navigationDestination(for: Product.self) { product in
             ProductDetailView(product: product)
         }

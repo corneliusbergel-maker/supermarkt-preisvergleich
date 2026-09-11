@@ -60,6 +60,16 @@ final class ProductDetailViewModel {
 
     let product: Product
 
+    /// Vollständiger Datensatz, über den Barcode nachgeladen.
+    ///
+    /// Der Suchindex führt keine strukturierte Menge, nur den Freitext. Lässt
+    /// der sich nicht deuten, fehlt der Grundpreis – dann lohnt sich die
+    /// zusätzliche Abfrage.
+    private(set) var detailedProduct: Product?
+
+    /// Der Datensatz, mit dem gerechnet und der angezeigt wird.
+    var displayProduct: Product { detailedProduct ?? product }
+
     private(set) var state: State = .idle
     private(set) var history: History?
     private(set) var detour: DetourAdvice?
@@ -89,6 +99,13 @@ final class ProductDetailViewModel {
         let settings = environment.settings
         let coordinate = environment.activeCoordinate
         let radiusKm = (settings.maxDistanceMeters.map { $0 / 1000 } ?? 25)
+
+        // Nur nachladen, wenn ohne den vollständigen Datensatz kein Grundpreis
+        // möglich wäre. Eine Abfrage zu sparen ist gegenüber einem
+        // gemeinnützig betriebenen Dienst die richtige Voreinstellung.
+        if product.quantity == nil {
+            detailedProduct = try? await environment.products.product(barcode: barcode)
+        }
 
         do {
             let observations = try await environment.prices.prices(
@@ -173,7 +190,7 @@ final class ProductDetailViewModel {
     func makeOffer(_ observation: PriceObservation, from coordinate: Coordinate?) -> PriceOffer {
         // Ohne bekannte Menge gibt es keinen Grundpreis -- und es wird auch
         // keiner geschätzt.
-        let unitPrice = product.quantity.flatMap {
+        let unitPrice = displayProduct.quantity.flatMap {
             UnitPrice.calculate(price: observation.price, quantity: $0)
         }
 
