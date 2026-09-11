@@ -54,6 +54,12 @@ struct StubTransport: HTTPTransport {
                                          body: Data(json.utf8)))])
     }
 
+    /// Zuletzt gesendete Anfrage -- zum Pruefen von Kopfzeilen und Rumpf.
+    var lastRequest: URLRequest? { log.lastRequest }
+
+    /// Alle gesendeten Anfragen in ihrer Reihenfolge.
+    var recordedRequests: [URLRequest] { log.recorded }
+
     func send(_ request: URLRequest) async throws -> HTTPResponse {
         let index = min(log.next(request), outcomes.count - 1)
         switch outcomes[index] {
