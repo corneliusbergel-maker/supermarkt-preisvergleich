@@ -130,11 +130,26 @@ public enum ProductTextNormalizer {
     /// Zerlegt einen Produktnamen in die bedeutungstragenden Tokens.
     /// Marken-, Mengen-, Fuell- und Neutralwoerter fallen heraus.
     public static func coreTokens(name: String, brand: String?) -> Set<String> {
-        let brandSet = brandTokens(brand)
+        coreTokens(name: name, brandTokens: brandTokens(brand))
+    }
+
+    /// Wie oben, aber mit einer vorgegebenen Markenwortliste.
+    ///
+    /// Wird beim Vergleich zweier Produkte gebraucht: Dort muss auf **beiden**
+    /// Seiten dieselbe Liste abgezogen werden. Sonst entsteht eine
+    /// Asymmetrie -- steht in einer Quelle "Ferrero, Nutella" und in der
+    /// anderen nur "Ferrero", faellt "nutella" einmal als Marke weg und bleibt
+    /// einmal als Bedeutungswort stehen. Die Namen wirken dann verschieden,
+    /// obwohl es dasselbe Produkt ist.
+    public static func coreTokens(name: String, brandTokens brandSet: Set<String>) -> Set<String> {
         let tokens = normalize(name).split(separator: " ").map(String.init)
         return Set(tokens.filter { token in
             token.count > 1
-            && !brandSet.contains(token)
+            // Ein trennendes Variantenwort ueberlebt auch dann, wenn es in
+            // der Marke vorkommt. Sonst wuerde eine Marke wie "Bio Company"
+            // das "bio" aus dem Produktnamen des Gegenstuecks tilgen -- und
+            // Bio- mit Nicht-Bio-Ware zusammenfuehren.
+            && (!brandSet.contains(token) || distinguishingVariantWords.contains(token))
             && !stopwords.contains(token)
             && !neutralVariantWords.contains(token)
             && !corporateSuffixes.contains(token)
@@ -159,5 +174,9 @@ public enum ProductTextNormalizer {
     /// Die Teilmenge der Tokens, die Produkte zwingend trennt.
     public static func variantTokens(name: String, brand: String?) -> Set<String> {
         coreTokens(name: name, brand: brand).intersection(distinguishingVariantWords)
+    }
+
+    public static func variantTokens(name: String, brandTokens: Set<String>) -> Set<String> {
+        coreTokens(name: name, brandTokens: brandTokens).intersection(distinguishingVariantWords)
     }
 }

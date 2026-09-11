@@ -108,6 +108,35 @@ final class ProductMatcherTests: XCTestCase {
         XCTAssertTrue(ProductMatcher.match(a, b).allowsPriceMerging)
     }
 
+    /// Quellen fuehren Marken unterschiedlich vollstaendig. Der Suchindex von
+    /// Open Food Facts liefert ["Ferrero", "Nutella"], die klassische Route
+    /// nur "Ferrero". Ohne gemeinsame Markenwortliste wuerde "nutella" einmal
+    /// als Marke wegfallen und einmal als Bedeutungswort stehen bleiben --
+    /// die Namen wirkten dann verschieden.
+    func testDifferentlyCompleteBrandListsStillMatch() {
+        let fromIndex = Product(barcode: nil, name: "Nutella Brotaufstrich",
+                                brand: "Ferrero, Nutella",
+                                quantity: Quantity.parse("600 g"))
+        let fromLegacy = Product(barcode: nil, name: "Nutella", brand: "Ferrero",
+                                 quantity: Quantity.parse("600 g"))
+
+        let result = ProductMatcher.match(fromIndex, fromLegacy)
+        XCTAssertTrue(result.allowsPriceMerging, "War: \(result.reason)")
+    }
+
+    /// Die Kehrseite derselben Regel: Ein trennendes Variantenwort darf nicht
+    /// deshalb verschwinden, weil es zufaellig auch im Markennamen steht.
+    /// Sonst wuerde Bio-Ware mit konventioneller zusammengefuehrt.
+    func testVariantWordInsideTheBrandStillSeparates() {
+        let bio = Product(barcode: nil, name: "Bio Vollmilch", brand: "Bio Company",
+                          quantity: Quantity.parse("1 l"))
+        let conventional = Product(barcode: nil, name: "Vollmilch", brand: "Bio Company",
+                                   quantity: Quantity.parse("1 l"))
+
+        XCTAssertFalse(ProductMatcher.match(bio, conventional).allowsPriceMerging,
+                       "„bio“ darf nicht als blosses Markenwort weggefiltert werden")
+    }
+
     // MARK: - Varianten
 
     func testBioIsAVariantThatSeparates() {

@@ -78,10 +78,16 @@ public enum ProductMatcher {
             return .different(reason: "Unterschiedliche Marke")
         }
 
+        // Beide Seiten werden gegen dieselbe Markenwortliste gemessen.
+        // Quellen fuehren Marken unterschiedlich vollstaendig ("Ferrero,
+        // Nutella" gegen "Ferrero"); ohne gemeinsame Liste wuerde dasselbe
+        // Wort einmal als Marke und einmal als Bedeutungswort gewertet.
+        let brands = brandA.union(brandB)
+
         // Varianten muessen exakt uebereinstimmen.
         // Das ist die Regel, die Cola Zero von Cola Original trennt.
-        let variantsA = ProductTextNormalizer.variantTokens(name: lhs.name, brand: lhs.brand)
-        let variantsB = ProductTextNormalizer.variantTokens(name: rhs.name, brand: rhs.brand)
+        let variantsA = ProductTextNormalizer.variantTokens(name: lhs.name, brandTokens: brands)
+        let variantsB = ProductTextNormalizer.variantTokens(name: rhs.name, brandTokens: brands)
         if variantsA != variantsB {
             let difference = variantsA.symmetricDifference(variantsB).sorted().joined(separator: ", ")
             return .different(reason: "Unterschiedliche Variante: \(difference)")
@@ -91,8 +97,8 @@ public enum ProductMatcher {
         // wenn beide Seiten ueberhaupt welche haben. "Coca Cola" (leer) gegen
         // "Coca-Cola Original Taste" (leer nach Normalisierung) faellt hier
         // korrekt durch.
-        let coreA = ProductTextNormalizer.coreTokens(name: lhs.name, brand: lhs.brand)
-        let coreB = ProductTextNormalizer.coreTokens(name: rhs.name, brand: rhs.brand)
+        let coreA = ProductTextNormalizer.coreTokens(name: lhs.name, brandTokens: brands)
+        let coreB = ProductTextNormalizer.coreTokens(name: rhs.name, brandTokens: brands)
         if !coreA.isEmpty && !coreB.isEmpty {
             let overlap = jaccard(coreA, coreB)
             if overlap < minimumNameOverlap {
