@@ -111,9 +111,13 @@ public struct OpenPricesContributionClient: Sendable {
         appendField("currency", currency)
         appendField("date", Self.dayFormatter.string(from: date))
 
+        // In einer Konstanten, nicht als Verkettung im Data-Aufruf:
+        // `.utf8` wuerde sonst nur an das letzte Teilstueck binden.
+        let disposition = "Content-Disposition: form-data; name=\"file\"; "
+            + "filename=\"preisschild.jpg\"\r\n"
+
         body.append(Data("--\(boundary)\r\n".utf8))
-        body.append(Data("Content-Disposition: form-data; name=\"file\"; "
-                         + "filename=\"preisschild.jpg\"\r\n".utf8))
+        body.append(Data(disposition.utf8))
         body.append(Data("Content-Type: image/jpeg\r\n\r\n".utf8))
         body.append(imageData)
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))
