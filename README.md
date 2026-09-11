@@ -60,6 +60,8 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | Preise beitragen (Preisschild fotografieren) | ✅ fertig |
 | Filialübersicht mit Karte | ✅ fertig |
 | Manuelle Ortswahl (MKLocalSearch) | ✅ fertig |
+| Preisänderungen mit Pfeil und Prozent | ✅ fertig |
+| „Deine besten Deals" auf der Startseite | ✅ fertig |
 | Kamera direkt in der App (statt Fotoauswahl) | ⏳ als Nächstes |
 | App-Icon, Privacy Manifest, Store-Reife | ⏳ danach |
 

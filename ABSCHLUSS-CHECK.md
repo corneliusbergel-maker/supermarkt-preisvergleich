@@ -95,5 +95,12 @@ Nachgerechnet sind es 23,67 %, gerundet **24 %**.
    natürlichere Weg.
 2. **Ein Durchgang auf echtem Gerät**, sobald ein Mac verfügbar ist. Danach
    werden aus den ⚠️-Zeilen oben entweder ✅ oder konkrete Fehlerberichte.
-3. **Preisänderungen** (Anforderung 25) — die Logik steht, die Anzeige fehlt.
-4. **VoiceOver-Durchgang** mit eingeschaltetem Bildschirmleser.
+3. **VoiceOver-Durchgang** mit eingeschaltetem Bildschirmleser.
+4. **Preisprognose** (Anforderung 41) — bewusst noch nicht gebaut. Sie setzt
+   deutlich mehr Beobachtungen je Produkt voraus, als in Deutschland
+   vorliegen. Eine Vorhersage aus vier Datenpunkten wäre Kaffeesatzleserei.
+
+Nachgetragen am 2026-09-11: **Preisänderungen** (Anforderung 25) und
+**„Deine besten Deals"** (Anforderung 28) sind gebaut. Beide erscheinen nur,
+wenn die Daten sie hergeben — eine Änderung braucht zwei tatsächlich
+beobachtete Preise, ein Rabatt in Prozent den bekannten Ursprungspreis.
