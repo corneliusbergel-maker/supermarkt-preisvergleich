@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Ziele, die kein eigener Hauptbereich sind, aber angesteuert werden koennen.
+enum AppRoute: Hashable {
+    case stores
+}
+
 /// Die fuenf Hauptbereiche der App.
 enum Destination: String, CaseIterable, Identifiable, Hashable {
     case home

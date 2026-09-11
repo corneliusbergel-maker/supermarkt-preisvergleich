@@ -43,6 +43,11 @@ struct HomeView: View {
         .navigationDestination(for: Product.self) { product in
             ProductDetailView(product: product)
         }
+        .navigationDestination(for: AppRoute.self) { route in
+            switch route {
+            case .stores: StoresView()
+            }
+        }
         .sheet(isPresented: $isScanning) {
             BarcodeScanSheet { product in
                 path.append(product)
@@ -133,6 +138,9 @@ struct HomeView: View {
             }
             ActionTile(symbol: "star", title: "Favoriten") {
                 selection = .favorites
+            }
+            ActionTile(symbol: "mappin.and.ellipse", title: "Filialen") {
+                path.append(AppRoute.stores)
             }
         }
     }

@@ -4,6 +4,7 @@ import PriceCore
 struct SettingsView: View {
 
     @Environment(AppEnvironment.self) private var appEnvironment
+    @State private var isChoosingPlace = false
 
     var body: some View {
         @Bindable var settings = appEnvironment.settings
@@ -20,6 +21,9 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(Theme.ink)
         .navigationTitle("Einstellungen")
+        .sheet(isPresented: $isChoosingPlace) {
+            ManualPlaceSheet()
+        }
     }
 
     // MARK: - Umkreis (#30)
@@ -107,6 +111,10 @@ struct SettingsView: View {
                 Text(error)
                     .font(.cardBody)
                     .foregroundStyle(Theme.textSecondary)
+            }
+
+            Button("Ort von Hand wählen") {
+                isChoosingPlace = true
             }
 
             if appEnvironment.settings.manualPlaceName != nil {
