@@ -70,16 +70,19 @@ signierte Datei lässt sich auf keinem anderen Gerät installieren.
 
 ## Schritt 3 — Entwicklermodus einschalten
 
-**Ab iOS 16 Pflicht.** Ohne ihn lässt sich eine selbst signierte App zwar
-installieren, startet aber nicht. (In der ersten Fassung dieser Anleitung
-fehlte der Schritt.)
+**Ab iOS 16 Pflicht — und zwar schon für die Installation**, nicht erst für
+den Start. Ist er aus, bricht die Installation ab; 3uTools meldet dann
+„Failed to start service". (Die erste Fassung dieser Anleitung hatte den
+Schritt gar nicht, die zweite an der falschen Stelle.)
 
 1. **Einstellungen → Datenschutz & Sicherheit → Entwicklermodus** → einschalten
 2. iOS verlangt einen **Neustart** — bestätigen
 3. Nach dem Neustart erscheint eine Abfrage → **Aktivieren** → Gerätecode eingeben
+4. Installation aus Schritt 2 **wiederholen**
 
-Der Eintrag „Entwicklermodus" taucht erst auf, **nachdem** eine selbst
-signierte App installiert wurde. Fehlt er, zuerst Schritt 2 abschließen.
+Der Eintrag „Entwicklermodus" ist oft versteckt, bis das iPhone einmal einen
+Installationsversuch einer selbst signierten App gesehen hat. Fehlt er also,
+ist ein gescheiterter erster Versuch kein Fehler, sondern der Weg dorthin.
 
 ## Schritt 4 — Entwickler vertrauen
 
@@ -159,6 +162,8 @@ Fehlermeldung.
 
 | Symptom | Ursache |
 |---|---|
+| 3uTools: „Failed to start service" | **Entwicklermodus** aus, oder iPhone gesperrt → Schritt 3, iPhone entsperrt lassen, erneut installieren |
+| 3uTools zeigt Typ „Jailbreak" | Normal bei selbst signierten Apps — 3uTools kennt nur App-Store-Signaturen als „normal" |
 | App ist installiert, startet aber nicht | **Entwicklermodus** fehlt → Schritt 3 |
 | „Sign Now" bleibt grau | Noch keine IPA in der Liste → „Add IPA Files" |
 | „Unable to install" | Bundle-Kennung schon vergeben → im Werkzeug eine andere setzen |
