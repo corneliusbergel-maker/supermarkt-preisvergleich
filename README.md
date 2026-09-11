@@ -14,6 +14,7 @@ und wo nicht — steht in [ARCHITEKTUR.md](ARCHITEKTUR.md), Abschnitt 4.4.
 |---|---|
 | [ARCHITEKTUR.md](ARCHITEKTUR.md) | Technische Analyse, geprüfte Datenquellen, Feature-Matrix, Roadmap |
 | [KOSTEN.md](KOSTEN.md) | Kosten & Limits **jeder** Abhängigkeit (Kurzfassung: 0 €) |
+| [INSTALLATION.md](INSTALLATION.md) | Xcode öffnen, Signing, aufs iPhone bringen, App-Store-Schritte |
 
 ---
 
