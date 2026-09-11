@@ -63,6 +63,12 @@ public enum DataSourceError: Error, Equatable, Sendable {
     /// Angefragte Ressource existiert nicht.
     case notFound
 
+    /// Nicht angemeldet oder Sitzung abgelaufen (HTTP 401/403).
+    ///
+    /// Eigener Fall, weil die Oberflaeche darauf anders reagieren muss:
+    /// Hier hilft kein Abwarten, sondern nur eine neue Anmeldung.
+    case unauthorized
+
     /// Sonstiger Fehlerstatus.
     case server(status: Int)
 
@@ -87,6 +93,8 @@ public enum DataSourceError: Error, Equatable, Sendable {
             return "Die Datenquelle ist gerade überlastet. Bitte später erneut versuchen."
         case .notFound:
             return "Dazu liegen keine Daten vor."
+        case .unauthorized:
+            return "Deine Anmeldung ist abgelaufen. Bitte melde dich erneut an."
         case .server(let status):
             return "Die Datenquelle antwortet mit einem Fehler (\(status))."
         case .invalidResponse:
@@ -101,7 +109,7 @@ public enum DataSourceError: Error, Equatable, Sendable {
         switch self {
         case .timedOut, .rateLimited, .temporarilyUnavailable:
             return true
-        case .offline, .cancelled, .notFound, .server, .invalidResponse, .decoding:
+        case .offline, .cancelled, .notFound, .server, .invalidResponse, .decoding, .unauthorized:
             return false
         }
     }
@@ -124,6 +132,7 @@ public enum DataSourceError: Error, Equatable, Sendable {
     public static func from(status: Int, retryAfter: TimeInterval? = nil) -> DataSourceError {
         switch status {
         case 404: return .notFound
+        case 401, 403: return .unauthorized
         case 429: return .rateLimited(retryAfter: retryAfter)
         case 500...599: return .temporarilyUnavailable(status: status)
         default: return .server(status: status)

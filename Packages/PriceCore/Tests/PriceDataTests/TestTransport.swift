@@ -1,18 +1,32 @@
 import Foundation
 @testable import PriceData
 
-/// Zaehlt Aufrufe ueber Kopien der Stub-Struktur hinweg.
+/// Zaehlt Aufrufe und schneidet die Anfragen mit -- ueber Kopien der
+/// Stub-Struktur hinweg.
 final class CallLog: @unchecked Sendable {
     private let lock = NSLock()
     private var value = 0
+    private var requests: [URLRequest] = []
 
     var count: Int {
         lock.lock(); defer { lock.unlock() }
         return value
     }
 
-    func next() -> Int {
+    /// Alle gesendeten Anfragen in ihrer Reihenfolge.
+    var recorded: [URLRequest] {
         lock.lock(); defer { lock.unlock() }
+        return requests
+    }
+
+    var lastRequest: URLRequest? {
+        lock.lock(); defer { lock.unlock() }
+        return requests.last
+    }
+
+    func next(_ request: URLRequest) -> Int {
+        lock.lock(); defer { lock.unlock() }
+        requests.append(request)
         defer { value += 1 }
         return value
     }
@@ -41,7 +55,7 @@ struct StubTransport: HTTPTransport {
     }
 
     func send(_ request: URLRequest) async throws -> HTTPResponse {
-        let index = min(log.next(), outcomes.count - 1)
+        let index = min(log.next(request), outcomes.count - 1)
         switch outcomes[index] {
         case .success(let response): return response
         case .failure(let error): throw error

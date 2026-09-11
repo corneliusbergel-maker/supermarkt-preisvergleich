@@ -91,6 +91,8 @@ final class DataSourceErrorTests: XCTestCase {
 
     func testStatusMapping() {
         XCTAssertEqual(DataSourceError.from(status: 404), .notFound)
+        XCTAssertEqual(DataSourceError.from(status: 401), .unauthorized)
+        XCTAssertEqual(DataSourceError.from(status: 403), .unauthorized)
         XCTAssertEqual(DataSourceError.from(status: 429, retryAfter: 12),
                        .rateLimited(retryAfter: 12))
         XCTAssertEqual(DataSourceError.from(status: 503),
@@ -117,7 +119,7 @@ final class DataSourceErrorTests: XCTestCase {
     func testEveryErrorHasAReadableMessage() {
         let all: [DataSourceError] = [
             .offline, .timedOut, .cancelled, .rateLimited(retryAfter: nil),
-            .temporarilyUnavailable(status: 503), .notFound,
+            .temporarilyUnavailable(status: 503), .notFound, .unauthorized,
             .server(status: 400), .invalidResponse, .decoding("x")
         ]
         for error in all {

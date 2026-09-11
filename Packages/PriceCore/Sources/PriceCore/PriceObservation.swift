@@ -81,6 +81,24 @@ public struct Store: Hashable, Sendable, Identifiable {
 
     public var displayName: String { name ?? retailer.name }
 
+    /// OpenStreetMap-Objektart, aus `id` gelesen.
+    ///
+    /// Die Kennung folgt der Form `"node/58489979"` -- so bauen sie sowohl der
+    /// Overpass- als auch der Open-Prices-Client. Zum Beitragen eines Preises
+    /// muessen Art und Nummer wieder getrennt uebergeben werden.
+    public var osmType: String? {
+        let parts = id.split(separator: "/")
+        guard parts.count == 2, !parts[0].isEmpty else { return nil }
+        return parts[0].uppercased()
+    }
+
+    /// OpenStreetMap-Objektnummer, aus `id` gelesen.
+    public var osmID: Int? {
+        let parts = id.split(separator: "/")
+        guard parts.count == 2 else { return nil }
+        return Int(parts[1])
+    }
+
     /// Einzeilige Adresse. Gibt `nil` zurueck, wenn nichts Verwertbares da ist
     /// -- statt einer halben Adresse, die nach einem Datenfehler aussieht.
     public var formattedAddress: String? {
