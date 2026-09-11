@@ -163,13 +163,25 @@ jobs:
             --time "9:41" --batteryState charged --batteryLevel 100 \
             --cellularBars 4 --wifiBars 3 || true
 
-          xcrun simctl launch "$UDID" de.preisfuchs.app
+          mkdir -p screenshots
+
+          # 1) Startseite.
           # Ein frisch gebooteter Simulator wirft Systembanner ein
           # ("Ready for Apple Intelligence"). Die verschwinden nach wenigen
           # Sekunden von selbst - vorher aufgenommene Bilder waeren unbrauchbar.
+          xcrun simctl launch "$UDID" de.preisfuchs.app
           sleep 22
-          mkdir -p screenshots
-          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-Start.png"
+          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-1-Start.png"
+
+          # 2) Suche mit ECHTEN Daten. Der Startparameter traegt nur den
+          # Suchbegriff ein - die Abfrage geht danach an die richtige
+          # Open-Food-Facts-API. Was im Bild steht, kommt von dort.
+          xcrun simctl terminate "$UDID" de.preisfuchs.app || true
+          sleep 2
+          xcrun simctl launch "$UDID" de.preisfuchs.app -uiTab search -uiQuery nutella
+          sleep 15
+          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-2-Suche.png"
+
           ls -la screenshots
 
       - name: Hochladen

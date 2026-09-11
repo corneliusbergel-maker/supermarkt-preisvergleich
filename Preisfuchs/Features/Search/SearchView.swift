@@ -25,6 +25,13 @@ struct SearchView: View {
         .navigationDestination(for: Product.self) { product in
             ProductDetailView(product: product)
         }
+        // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
+        // die Suche läuft danach ganz normal gegen die echte API.
+        .task {
+            if let query = LaunchOptions.initialSearchQuery, model.query.isEmpty {
+                model.query = query
+            }
+        }
         // An den Suchtext gebunden: Tippt der Nutzer weiter, bricht SwiftUI
         // den laufenden Aufruf ab, bevor daraus eine Anfrage wird.
         .task(id: model.query) { await model.search() }

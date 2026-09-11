@@ -47,7 +47,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
 struct RootView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @State private var selection: Destination = .home
+    @State private var selection: Destination = LaunchOptions.initialDestination ?? .home
 
     var body: some View {
         Group {
