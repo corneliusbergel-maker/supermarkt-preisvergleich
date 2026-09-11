@@ -18,6 +18,7 @@ struct ProductDetailView: View {
     @State private var model: ProductDetailViewModel
     @State private var routeTarget: Store?
     @State private var isEditingAlert = false
+    @State private var isContributing = false
 
     private var isWide: Bool { sizeClass != .compact }
 
@@ -66,6 +67,9 @@ struct ProductDetailView: View {
             PriceAlertSheet(product: model.displayProduct,
                             currentBest: bestPrice,
                             existing: existingAlert)
+        }
+        .sheet(isPresented: $isContributing) {
+            ContributePriceSheet(product: model.displayProduct)
         }
     }
 
@@ -255,6 +259,7 @@ struct ProductDetailView: View {
                     routeTarget = store
                 }
             }
+            contributeLink
             sourceNote
         }
     }
@@ -431,9 +436,30 @@ struct ProductDetailView: View {
                 title: "Keine Preisdaten in deiner Nähe",
                 message: "Für dieses Produkt liegt hier kein belegter Preis vor. "
                        + "Die Preisdatenbank wird von Menschen gefüllt – wenn du den "
-                       + "Preis im Markt siehst, kannst du ihn beitragen."
-            )
+                       + "Preis im Markt siehst, kannst du ihn beitragen.",
+                // Ohne Barcode lässt sich ein Preis nicht zuordnen; dann wird
+                // der Knopf gar nicht erst angeboten.
+                actionTitle: model.displayProduct.barcode == nil ? nil : "Preis beitragen"
+            ) {
+                isContributing = true
+            }
             .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// Auch wenn es schon Preise gibt, darf man einen neueren beitragen --
+    /// gerade dann, wenn die vorhandenen als veraltet markiert sind.
+    @ViewBuilder
+    private var contributeLink: some View {
+        if model.displayProduct.barcode != nil {
+            Button {
+                isContributing = true
+            } label: {
+                Label("Preis aus dem Markt beitragen", systemImage: "plus.viewfinder")
+                    .font(.cardBody)
+                    .foregroundStyle(Theme.accent)
+            }
+            .buttonStyle(.plain)
         }
     }
 
