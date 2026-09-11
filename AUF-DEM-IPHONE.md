@@ -95,6 +95,25 @@ Danach startet die App.
 
 ---
 
+## Updates einspielen
+
+Nach jeder Änderung baut die CI eine neue IPA. Auf den Desktop holen:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "Tools\ipa-auf-desktop.ps1"
+```
+
+Das ersetzt `Preisfuchs-unsigned.ipa` auf dem Desktop durch die neueste
+Fassung aus einem **grünen** Lauf — also nur, wenn die App gebaut und alle
+Tests bestanden hat.
+
+Danach in 3uTools wie beim ersten Mal: **Add IPA Files → Sign Now → Install**.
+Die Datei ist unsigniert und muss bei jedem Update neu signiert werden.
+Favoriten und Einkaufsliste auf dem iPhone bleiben erhalten, solange du die
+App nicht löschst.
+
+---
+
 ## Die Grenzen — ehrlich
 
 **Nach 7 Tagen läuft die Signatur ab.** Die App startet dann nicht mehr. Neu
