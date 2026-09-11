@@ -60,6 +60,14 @@ public enum DataSourceError: Error, Equatable, Sendable {
     /// am 2026-09-10 mit HTTP 503 beobachtet.
     case temporarilyUnavailable(status: Int)
 
+    /// Gegenstelle nicht erreichbar: Verbindung abgewiesen, Name nicht
+    /// auflösbar, Antwort mittendrin abgebrochen.
+    ///
+    /// Vorübergehend und deshalb wiederholbar. Am 2026-09-11 scheiterte so ein
+    /// Filialabruf in der CI, während derselbe Build auf dem iPad 228 Filialen
+    /// lud -- damals noch als „Unerwartete Antwort“ und ohne Wiederholen-Knopf.
+    case unreachable
+
     /// Angefragte Ressource existiert nicht.
     case notFound
 
@@ -91,6 +99,8 @@ public enum DataSourceError: Error, Equatable, Sendable {
             return "Zu viele Anfragen in kurzer Zeit. Bitte kurz warten."
         case .temporarilyUnavailable:
             return "Die Datenquelle ist gerade überlastet. Bitte später erneut versuchen."
+        case .unreachable:
+            return "Die Datenquelle ist gerade nicht erreichbar. Bitte gleich noch einmal versuchen."
         case .notFound:
             return "Dazu liegen keine Daten vor."
         case .unauthorized:
@@ -104,13 +114,29 @@ public enum DataSourceError: Error, Equatable, Sendable {
         }
     }
 
-    /// Lohnt sich ein erneuter Versuch?
+    /// Lohnt sich ein **automatischer** erneuter Versuch?
     public var isRetryable: Bool {
         switch self {
-        case .timedOut, .rateLimited, .temporarilyUnavailable:
+        case .timedOut, .rateLimited, .temporarilyUnavailable, .unreachable:
             return true
         case .offline, .cancelled, .notFound, .server, .invalidResponse, .decoding, .unauthorized:
             return false
+        }
+    }
+
+    /// Soll die Oberfläche „Erneut versuchen“ anbieten?
+    ///
+    /// Großzügiger als `isRetryable`: Automatisch wiederholt wird nur, was
+    /// sicher vorübergehend ist. Von Hand darf man es fast immer noch einmal
+    /// versuchen -- wer wieder Netz hat, braucht einen Knopf, und eine
+    /// Fehlermeldung ohne Ausweg ist eine Sackgasse.
+    public var offersManualRetry: Bool {
+        switch self {
+        case .cancelled, .notFound, .unauthorized:
+            return false
+        case .offline, .timedOut, .rateLimited, .temporarilyUnavailable, .unreachable,
+             .server, .invalidResponse, .decoding:
+            return true
         }
     }
 
@@ -123,6 +149,10 @@ public enum DataSourceError: Error, Equatable, Sendable {
             self = .timedOut
         case .cancelled:
             self = .cancelled
+        case .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed,
+             .badServerResponse, .cannotParseResponse, .zeroByteResource,
+             .secureConnectionFailed, .resourceUnavailable:
+            self = .unreachable
         default:
             self = .invalidResponse
         }

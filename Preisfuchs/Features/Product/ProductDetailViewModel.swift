@@ -126,9 +126,9 @@ final class ProductDetailViewModel {
 
             let comparison = PriceComparator.compare(
                 offers,
-                allowedRetailerIDs: settings.enabledRetailerIDs.isEmpty
-                    ? nil
-                    : allowedIdentifiers(in: offers, settings: settings),
+                // Immer über `includes` filtern: Auch mit allen Ketten aus
+                // bleibt „Andere Märkte“ eine eigene Entscheidung.
+                allowedRetailerIDs: allowedIdentifiers(in: offers, settings: settings),
                 maxDistanceMeters: PriceComparator.effectiveDistanceLimit(
                     settings.maxDistanceMeters,
                     hasReferencePoint: coordinate != nil
@@ -149,7 +149,7 @@ final class ProductDetailViewModel {
 
         } catch let error as DataSourceError {
             guard !Task.isCancelled, error != .cancelled else { return }
-            state = .failed(message: error.userMessage, isRetryable: error.isRetryable)
+            state = .failed(message: error.userMessage, isRetryable: error.offersManualRetry)
         } catch {
             guard !Task.isCancelled else { return }
             state = .failed(message: "Die Preise konnten nicht geladen werden.",

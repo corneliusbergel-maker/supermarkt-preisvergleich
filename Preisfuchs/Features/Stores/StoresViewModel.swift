@@ -66,7 +66,7 @@ final class StoresViewModel {
 
         } catch let error as DataSourceError {
             guard !Task.isCancelled, error != .cancelled else { return }
-            state = .failed(message: error.userMessage, isRetryable: error.isRetryable)
+            state = .failed(message: error.userMessage, isRetryable: error.offersManualRetry)
         } catch {
             guard !Task.isCancelled else { return }
             state = .failed(message: "Die Filialen konnten nicht geladen werden.",

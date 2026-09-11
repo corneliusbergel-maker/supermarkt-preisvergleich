@@ -83,7 +83,7 @@ final class SearchViewModel {
 
         } catch let error as DataSourceError {
             guard !Task.isCancelled, error != .cancelled else { return }
-            state = .failed(message: error.userMessage, isRetryable: error.isRetryable)
+            state = .failed(message: error.userMessage, isRetryable: error.offersManualRetry)
         } catch {
             guard !Task.isCancelled else { return }
             state = .failed(message: "Die Suche ist fehlgeschlagen.", isRetryable: true)
@@ -107,7 +107,7 @@ final class SearchViewModel {
             }
             state = groups.isEmpty ? .noResults(query: trimmed) : .results(groups)
         } catch let error as DataSourceError {
-            state = .failed(message: error.userMessage, isRetryable: error.isRetryable)
+            state = .failed(message: error.userMessage, isRetryable: error.offersManualRetry)
         } catch {
             state = .failed(message: "Die Suche ist fehlgeschlagen.", isRetryable: true)
         }

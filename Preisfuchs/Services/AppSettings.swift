@@ -28,6 +28,16 @@ final class AppSettings {
         "Penny", "Netto Marken-Discount", "Netto", "Norma", "dm", "Rossmann"
     ]
 
+    static let selectableRetailerIDs: Set<String> = Set(
+        selectableRetailers.compactMap { RetailerRegistry.identifier(forBrand: $0) }
+    )
+
+    /// Alle Märkte, die nicht in der Auswahlliste stehen: Globus, Marktkauf,
+    /// tegut, Bioläden und so weiter. Standard: an.
+    var includeOtherRetailers: Bool {
+        didSet { defaults.set(includeOtherRetailers, forKey: Keys.otherRetailers) }
+    }
+
     // MARK: - Umkreis (#30)
 
     /// `nil` bedeutet unbegrenzt.
@@ -100,13 +110,15 @@ final class AppSettings {
         if let stored = defaults.array(forKey: Keys.retailers) as? [String] {
             self.enabledRetailerIDs = Set(stored)
         } else {
-            // Voreinstellung: die grossen Ketten an, Drogerien aus.
+            // Voreinstellung: alle Supermärkte und Discounter an, Drogerien aus.
             self.enabledRetailerIDs = Set(
                 ["REWE", "EDEKA", "Kaufland", "Lidl", "Aldi Süd", "Aldi Nord",
-                 "Penny", "Netto Marken-Discount"]
+                 "Penny", "Netto Marken-Discount", "Netto", "Norma"]
                     .compactMap { RetailerRegistry.identifier(forBrand: $0) }
             )
         }
+
+        self.includeOtherRetailers = defaults.object(forKey: Keys.otherRetailers) as? Bool ?? true
 
         // Voreinstellung 25 km, nicht 5 km. Gemessen am 2026-09-11 hatte das
         // am besten belegte Produkt im Umkreis von 25 km um Berlin-Mitte ganze
@@ -128,16 +140,22 @@ final class AppSettings {
 
     // MARK: - Anwenden
 
-    /// Ist diese Kette eingeschaltet?
+    /// Wird dieser Markt berücksichtigt?
+    ///
+    /// Die Einzelschalter gelten nur für die Ketten der Auswahlliste; alle
+    /// übrigen folgen „Andere Märkte“. Früher fiel alles außerhalb der Liste
+    /// immer heraus -- Preise von Globus, Marktkauf oder tegut verschwanden
+    /// ohne Hinweis, obwohl sie belegt waren.
     func includes(retailer: Retailer?) -> Bool {
         guard let retailer else { return false }
-        if enabledRetailerIDs.contains(retailer.id) { return true }
         // Filialen aus OpenStreetMap tragen eine Wikidata-Kennung, Preise aus
         // Open Prices nur den Namen. Deshalb zusaetzlich ueber den Namen pruefen.
-        guard let byName = RetailerRegistry.identifier(forBrand: retailer.name) else {
-            return false
+        let candidates = [retailer.id, RetailerRegistry.identifier(forBrand: retailer.name)]
+            .compactMap { $0 }
+        if let listed = candidates.first(where: { Self.selectableRetailerIDs.contains($0) }) {
+            return enabledRetailerIDs.contains(listed)
         }
-        return enabledRetailerIDs.contains(byName)
+        return includeOtherRetailers
     }
 
     func toggle(retailerNamed name: String) {
@@ -164,6 +182,7 @@ final class AppSettings {
 
     private enum Keys {
         static let retailers = "settings.enabledRetailerIDs"
+        static let otherRetailers = "settings.includeOtherRetailers"
         static let maxDistance = "settings.maxDistanceMeters"
         static let sort = "settings.sortCriterion"
         static let costPerKm = "settings.costPerKilometer"

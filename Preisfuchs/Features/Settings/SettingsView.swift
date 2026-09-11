@@ -78,12 +78,25 @@ struct SettingsView: View {
                     set: { _ in appEnvironment.settings.toggle(retailerNamed: retailer) }
                 ))
             }
+
+            Toggle(isOn: Binding(
+                get: { appEnvironment.settings.includeOtherRetailers },
+                set: { appEnvironment.settings.includeOtherRetailers = $0 }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Andere Märkte")
+                    Text("Globus, Marktkauf, tegut, Bioläden und alle übrigen")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
         } header: {
             Text("Berücksichtigte Märkte")
         } footer: {
-            Text("Abgewählte Ketten fließen nicht in den Preisvergleich ein. "
+            Text("Abgewählte Märkte fließen nicht in den Preisvergleich ein. "
                  + "Unterschiedliche Schreibweisen derselben Kette – etwa „Rewe“ "
-                 + "und „REWE“ – werden dabei zusammengeführt.")
+                 + "und „REWE“ – werden dabei zusammengeführt. „Netto“ ist die "
+                 + "Kette mit dem Hund, nicht Netto Marken-Discount.")
         }
         .listRowBackground(Theme.surface)
     }

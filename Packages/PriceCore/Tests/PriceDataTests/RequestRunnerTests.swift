@@ -105,9 +105,15 @@ final class DataSourceErrorTests: XCTestCase {
         XCTAssertEqual(DataSourceError(urlError: URLError(.networkConnectionLost)), .offline)
         XCTAssertEqual(DataSourceError(urlError: URLError(.timedOut)), .timedOut)
         XCTAssertEqual(DataSourceError(urlError: URLError(.cancelled)), .cancelled)
+        // Abgewiesene oder abgebrochene Verbindungen sind vorübergehend -- sie
+        // landeten früher als „Unerwartete Antwort“ ohne Wiederholen.
+        XCTAssertEqual(DataSourceError(urlError: URLError(.cannotConnectToHost)), .unreachable)
+        XCTAssertEqual(DataSourceError(urlError: URLError(.cannotFindHost)), .unreachable)
+        XCTAssertEqual(DataSourceError(urlError: URLError(.badServerResponse)), .unreachable)
     }
 
     func testRetryability() {
+        XCTAssertTrue(DataSourceError.unreachable.isRetryable)
         XCTAssertTrue(DataSourceError.temporarilyUnavailable(status: 503).isRetryable)
         XCTAssertTrue(DataSourceError.timedOut.isRetryable)
         XCTAssertTrue(DataSourceError.rateLimited(retryAfter: nil).isRetryable)
@@ -116,10 +122,22 @@ final class DataSourceErrorTests: XCTestCase {
         XCTAssertFalse(DataSourceError.decoding("x").isRetryable)
     }
 
+    /// Ohne Netz wird nicht automatisch wiederholt -- ein Knopf muss es aber
+    /// geben, sonst steckt man nach der Rückkehr ins Netz fest.
+    func testManualRetryIsOfferedWhereItCanHelp() {
+        XCTAssertTrue(DataSourceError.offline.offersManualRetry)
+        XCTAssertTrue(DataSourceError.unreachable.offersManualRetry)
+        XCTAssertTrue(DataSourceError.invalidResponse.offersManualRetry)
+        XCTAssertTrue(DataSourceError.server(status: 400).offersManualRetry)
+        XCTAssertFalse(DataSourceError.notFound.offersManualRetry)
+        XCTAssertFalse(DataSourceError.unauthorized.offersManualRetry)
+        XCTAssertFalse(DataSourceError.cancelled.offersManualRetry)
+    }
+
     func testEveryErrorHasAReadableMessage() {
         let all: [DataSourceError] = [
             .offline, .timedOut, .cancelled, .rateLimited(retryAfter: nil),
-            .temporarilyUnavailable(status: 503), .notFound, .unauthorized,
+            .temporarilyUnavailable(status: 503), .unreachable, .notFound, .unauthorized,
             .server(status: 400), .invalidResponse, .decoding("x")
         ]
         for error in all {

@@ -82,10 +82,16 @@ struct RootView: View {
             if LaunchOptions.initialRoute == .stores {
                 path.append(AppRoute.stores)
             }
-            guard let barcode = LaunchOptions.initialBarcode,
-                  let product = try? await appEnvironment.products.product(barcode: barcode)
-            else { return }
-            path.append(product)
+            guard let barcode = LaunchOptions.initialBarcode else { return }
+            // Open Food Facts antwortet unter Last gelegentlich nicht. Ein
+            // Bildschirmfoto ohne Produktseite sagt dann nichts über die App.
+            for attempt in 1...3 {
+                if let product = try? await appEnvironment.products.product(barcode: barcode) {
+                    path.append(product)
+                    return
+                }
+                try? await Task.sleep(for: .seconds(2 * attempt))
+            }
         }
         // Jeder Tab beginnt bei seiner Wurzel. Alle Tabs teilen sich einen
         // Navigationspfad; ohne dieses Zurücksetzen blieb eine geöffnete
