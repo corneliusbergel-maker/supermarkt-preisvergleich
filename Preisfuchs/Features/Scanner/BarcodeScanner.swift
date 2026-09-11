@@ -40,6 +40,9 @@ enum BarcodeScanning {
         }
     }
 
+    /// An den Hauptaktor gebunden, weil `DataScannerViewController.isSupported`
+    /// und `.isAvailable` es sind.
+    @MainActor
     static var availability: Availability {
         #if targetEnvironment(macCatalyst)
         return .unsupportedPlatform
