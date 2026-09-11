@@ -30,6 +30,7 @@ struct ContributePriceSheet: View {
 
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
+    @State private var isTakingPhoto = false
 
     @State private var priceText = ""
     @State private var isDiscounted = false
@@ -69,6 +70,14 @@ struct ContributePriceSheet: View {
             session = OpenPricesCredentialStore.load()
             await loadStores()
         }
+        #if canImport(UIKit) && !targetEnvironment(macCatalyst)
+        .fullScreenCover(isPresented: $isTakingPhoto) {
+            CameraPicker { image in
+                photoData = Self.compressImage(image)
+            }
+            .ignoresSafeArea()
+        }
+        #endif
     }
 
     // MARK: - Anmeldung
@@ -203,9 +212,20 @@ struct ContributePriceSheet: View {
 
     private var photoSection: some View {
         Section {
+            // Vor dem Regal ist die Kamera der kürzeste Weg. Wo es keine
+            // gibt (Mac, Simulator), erscheint der Eintrag gar nicht.
+            if CameraCapture.isAvailable {
+                Button {
+                    isTakingPhoto = true
+                } label: {
+                    Label(photoData == nil ? "Preisschild fotografieren" : "Neu fotografieren",
+                          systemImage: "camera.fill")
+                }
+            }
+
             PhotosPicker(selection: $photoItem, matching: .images) {
-                Label(photoData == nil ? "Foto des Preisschilds wählen" : "Foto ersetzen",
-                      systemImage: "camera")
+                Label(photoData == nil ? "Foto aus der Mediathek wählen" : "Anderes Foto wählen",
+                      systemImage: "photo.on.rectangle")
             }
             .onChange(of: photoItem) { _, newValue in
                 Task { await loadPhoto(newValue) }
@@ -346,21 +366,29 @@ struct ContributePriceSheet: View {
     private static func compress(_ data: Data) -> Data {
         #if canImport(UIKit)
         guard let image = UIImage(data: data) else { return data }
-
-        let maximumEdge: CGFloat = 1600
-        let scale = min(1, maximumEdge / max(image.size.width, image.size.height))
-
-        let target = CGSize(width: image.size.width * scale,
-                            height: image.size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: target)
-        let resized = renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: target))
-        }
-        return resized.jpegData(compressionQuality: 0.7) ?? data
+        return compressImage(image) ?? data
         #else
         return data
         #endif
     }
+
+    #if canImport(UIKit)
+    static func compressImage(_ image: UIImage) -> Data? {
+        let maximumEdge: CGFloat = 1600
+        let longestSide = max(image.size.width, image.size.height)
+        guard longestSide > 0 else { return nil }
+
+        let scale = min(1, maximumEdge / longestSide)
+        let target = CGSize(width: image.size.width * scale,
+                            height: image.size.height * scale)
+
+        let renderer = UIGraphicsImageRenderer(size: target)
+        let resized = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: target))
+        }
+        return resized.jpegData(compressionQuality: 0.7)
+    }
+    #endif
 
     private func submit() async {
         guard let session, let store = selectedStore,
