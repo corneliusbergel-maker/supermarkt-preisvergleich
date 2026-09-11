@@ -52,9 +52,11 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | **Produktsuche mit echten Daten** | ✅ läuft |
 | **Produktdetail: Preisvergleich, Verlauf, Route** | ✅ läuft |
 | SwiftData: Favoriten, Einkaufsliste, Alarme | ✅ fertig |
-| Barcode-Scanner (VisionKit) | ⏳ als Nächstes |
+| Barcode-Scanner (VisionKit) | ✅ fertig |
 | Einkaufslisten-Optimierung in der Oberfläche | ✅ läuft |
-| Preisalarme auslösen (BGAppRefreshTask) | ⏳ danach |
+| Preisalarme (lokal, BGAppRefreshTask) | ✅ fertig |
+| Preise beitragen (Preisschild fotografieren) | ⏳ als Nächstes |
+| Filialübersicht mit Karte | ⏳ danach |
 
 ---
 
