@@ -16,9 +16,11 @@ struct BarcodeScanSheet: View {
     /// danach selbst.
     let onProduct: (Product) -> Void
 
-    @State private var state: State = .checking
+    @State private var phase: ScanPhase = .checking
 
-    enum State {
+    /// Benannt als `ScanPhase`, nicht `State` -- ein verschachteltes `State`
+    /// verdeckt SwiftUIs `@State`-Attribut in derselben Ansicht.
+    enum ScanPhase {
         case checking
         case needsPermission
         case permissionDenied
@@ -51,39 +53,39 @@ struct BarcodeScanSheet: View {
     private func prepare() async {
         let availability = BarcodeScanning.availability
         guard availability == .available else {
-            state = .unavailable(availability)
+            phase = .unavailable(availability)
             return
         }
 
         switch BarcodeScanning.cameraAuthorization {
         case .authorized:
-            state = .scanning
+            phase = .scanning
         case .notDetermined:
-            state = .needsPermission
+            phase = .needsPermission
         case .denied, .restricted:
-            state = .permissionDenied
+            phase = .permissionDenied
         @unknown default:
-            state = .needsPermission
+            phase = .needsPermission
         }
     }
 
     private func requestPermission() async {
         let granted = await BarcodeScanning.requestCameraAccess()
-        state = granted ? .scanning : .permissionDenied
+        phase = granted ? .scanning : .permissionDenied
     }
 
     private func resolve(code: String) async {
-        state = .resolving(code: code)
+        phase = .resolving(code: code)
         do {
             let product = try await appEnvironment.products.product(barcode: code)
             onProduct(product)
             dismiss()
         } catch DataSourceError.notFound {
-            state = .notFound(code: code)
+            phase = .notFound(code: code)
         } catch let error as DataSourceError {
-            state = .failed(message: error.userMessage, code: code)
+            phase = .failed(message: error.userMessage, code: code)
         } catch {
-            state = .failed(message: "Der Barcode konnte nicht aufgelöst werden.", code: code)
+            phase = .failed(message: "Der Barcode konnte nicht aufgelöst werden.", code: code)
         }
     }
 
@@ -91,7 +93,7 @@ struct BarcodeScanSheet: View {
 
     @ViewBuilder
     private var content: some View {
-        switch state {
+        switch phase {
 
         case .checking:
             ProgressView().tint(Theme.accent)
@@ -144,7 +146,7 @@ struct BarcodeScanSheet: View {
                        + "hier bewusst kein Platzhalter erfunden.",
                 actionTitle: "Nochmal scannen"
             ) {
-                state = .scanning
+                phase = .scanning
             }
 
         case .failed(let message, _):
@@ -152,7 +154,7 @@ struct BarcodeScanSheet: View {
                        title: "Abruf fehlgeschlagen",
                        message: message,
                        actionTitle: "Nochmal scannen") {
-                state = .scanning
+                phase = .scanning
             }
         }
     }
