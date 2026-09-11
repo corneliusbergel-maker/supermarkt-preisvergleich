@@ -14,7 +14,8 @@ und wo nicht — steht in [ARCHITEKTUR.md](ARCHITEKTUR.md), Abschnitt 4.4.
 |---|---|
 | [ARCHITEKTUR.md](ARCHITEKTUR.md) | Technische Analyse, geprüfte Datenquellen, Feature-Matrix, Roadmap |
 | [KOSTEN.md](KOSTEN.md) | Kosten & Limits **jeder** Abhängigkeit (Kurzfassung: 0 €) |
-| [INSTALLATION.md](INSTALLATION.md) | Xcode öffnen, Signing, aufs iPhone bringen, App-Store-Schritte |
+| **[AUF-DEM-IPHONE.md](AUF-DEM-IPHONE.md)** | **Ohne Mac aufs eigene iPhone — kostenlos, in drei Schritten** |
+| [INSTALLATION.md](INSTALLATION.md) | Xcode öffnen, Signing, App-Store-Schritte |
 | [ABSCHLUSS-CHECK.md](ABSCHLUSS-CHECK.md) | Prüfliste: was nachgewiesen ist und was **ungeprüft** bleibt |
 
 ---
@@ -27,8 +28,14 @@ Kostenstelle ist das Apple Developer Program (99 €/Jahr) — und das nur, wenn
 du TestFlight, den App Store oder echten Push willst. Details in
 [KOSTEN.md](KOSTEN.md).
 
-**2. Gebaut werden kann nur auf einem Mac.** Xcode gibt es nicht für Windows.
-Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
+**2. Gebaut wird auf einem Mac — aber nicht auf deinem.** Xcode gibt es nicht
+für Windows. Die CI bei GitHub übernimmt das Bauen auf einem echten
+macOS-Rechner, kostenlos.
+
+**Aufs eigene iPhone kommt die App trotzdem, ohne Mac und ohne Gebühr:** Die
+CI baut eine unsignierte IPA, signiert wird unter Windows mit der eigenen
+kostenlosen Apple-ID. Die Signatur hält 7 Tage und lässt sich beliebig
+erneuern. Anleitung: **[AUF-DEM-IPHONE.md](AUF-DEM-IPHONE.md)**.
 
 ---
 
