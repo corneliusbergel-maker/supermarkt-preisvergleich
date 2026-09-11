@@ -67,6 +67,14 @@ struct RootView: View {
         }
         .background(Theme.ink.ignoresSafeArea())
         .tint(Theme.accent)
+        .safeAreaInset(edge: .top) {
+            // Sagt ausdruecklich, wenn gerade zwischengespeicherte Daten
+            // gezeigt werden. Ohne diesen Hinweis waere der Zwischenspeicher
+            // eine Luege -- die Preise saehen aus wie eben geladen.
+            if let text = appEnvironment.freshness.bannerText {
+                offlineBanner(text)
+            }
+        }
         // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
         // Produkt und Preise kommen aus den echten APIs.
         .task {
@@ -75,6 +83,28 @@ struct RootView: View {
             else { return }
             path.append(product)
         }
+    }
+
+    private func offlineBanner(_ text: String) -> some View {
+        HStack(spacing: Theme.Spacing.s) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 12, weight: .semibold))
+            Text(text)
+                .font(.caption)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(Theme.textPrimary)
+        .padding(.horizontal, Theme.Spacing.l)
+        .padding(.vertical, Theme.Spacing.s)
+        .frame(maxWidth: .infinity)
+        .background(Theme.deal.opacity(0.22))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Theme.deal.opacity(0.5))
+                .frame(height: 1)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - iPhone hochkant

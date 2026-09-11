@@ -16,6 +16,10 @@ final class AppEnvironment {
     let location: LocationService
     let notifications: NotificationService
 
+    /// Sagt der Oberflaeche, ob gerade zwischengespeicherte Daten gezeigt
+    /// werden (#32).
+    let freshness: DataFreshness
+
     let products: OpenFoodFactsClient
     let prices: OpenPricesClient
     let stores: OverpassClient
@@ -30,15 +34,39 @@ final class AppEnvironment {
     init(settings: AppSettings? = nil,
          location: LocationService? = nil,
          notifications: NotificationService? = nil,
-         products: OpenFoodFactsClient = OpenFoodFactsClient(),
-         prices: OpenPricesClient = OpenPricesClient(),
-         stores: OverpassClient = OverpassClient()) {
+         products: OpenFoodFactsClient? = nil,
+         prices: OpenPricesClient? = nil,
+         stores: OverpassClient? = nil) {
+
         self.settings = settings ?? AppSettings()
         self.location = location ?? LocationService()
         self.notifications = notifications ?? NotificationService()
-        self.products = products
-        self.prices = prices
-        self.stores = stores
+
+        let freshness = DataFreshness()
+        self.freshness = freshness
+
+        // Ein gemeinsamer Transport fuer alle Leseabfragen. Er legt Antworten
+        // ab und liefert sie bei Netzproblemen wieder aus -- und meldet der
+        // Oberflaeche, dass sie nicht mehr frisch sind.
+        let transport = CachingTransport(
+            wrapping: URLSessionTransport(),
+            onCacheHit: { date in
+                Task { @MainActor in freshness.noteCacheHit(at: date) }
+            },
+            onFreshResponse: {
+                Task { @MainActor in freshness.noteFreshResponse() }
+            }
+        )
+
+        self.products = products ?? OpenFoodFactsClient(transport: transport)
+        self.prices = prices ?? OpenPricesClient(transport: transport)
+
+        // Overpass bleibt beim einfachen Transport: Es fragt per POST ab, und
+        // POST wird bewusst nicht auf Platte gelegt. Die Filialen haben
+        // stattdessen einen eigenen Zwischenspeicher im Arbeitsspeicher --
+        // der ueberlebt allerdings keinen Neustart der App. Ohne Netz und nach
+        // einem Neustart bleibt die Filialliste deshalb leer und sagt das auch.
+        self.stores = stores ?? OverpassClient()
     }
 
     /// Der Ort, mit dem gerechnet wird.
