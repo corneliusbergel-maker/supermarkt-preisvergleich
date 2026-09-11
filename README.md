@@ -62,7 +62,9 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | Manuelle Ortswahl (MKLocalSearch) | ✅ fertig |
 | Preisänderungen mit Pfeil und Prozent | ✅ fertig |
 | „Deine besten Deals" auf der Startseite | ✅ fertig |
-| Kamera direkt in der App (statt Fotoauswahl) | ⏳ als Nächstes |
+| Kamera direkt in der App | ✅ fertig |
+| Offline: gecachte Daten, klar gekennzeichnet | ✅ fertig |
+| Packungsgrößen vergleichen („18 % günstiger pro kg") | ✅ fertig |
 | App-Icon, Privacy Manifest, Store-Reife | ⏳ danach |
 
 ---

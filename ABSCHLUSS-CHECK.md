@@ -42,7 +42,7 @@ dass dort etwas klemmt.
 | 15 | Preisverlauf funktioniert | ✅ Bild | 90-Tage-Diagramm mit echten Beobachtungen |
 | 16 | Preisalarme vorbereitet | ⚠️ ungeprüft | iOS plant Hintergrundaufgaben selbst — im Simulator nicht erzwingbar |
 | 17 | Fehlerfälle funktionieren | ✅ Bild | Der Ausfall von Open Food Facts trat **im Lauf wirklich auf** und wurde korrekt als Überlastung gemeldet |
-| 18 | Offline-Verhalten | ⚠️ ungeprüft | Fehlerarten getestet, echter Netzausfall nie simuliert |
+| 18 | Offline-Verhalten | ✅ Test | Gecachte Antworten werden bei Netzausfall ausgeliefert **und als solche gekennzeichnet**; 8 Tests decken es ab. Ein echter Netzausfall auf Hardware wurde nicht durchgespielt. |
 | 19 | Dark Mode | ✅ Bild | Die App ist durchgehend dunkel gestaltet |
 | 20 | Accessibility berücksichtigt | ⚠️ teilweise | Beschriftungen gesetzt, Dynamic Type beachtet; kein VoiceOver-Durchgang |
 | 21 | Keine Fake-Produktdaten | ✅ | Kein Mock-Service im Produktivcode |

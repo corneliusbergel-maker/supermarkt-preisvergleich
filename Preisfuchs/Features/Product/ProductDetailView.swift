@@ -19,6 +19,7 @@ struct ProductDetailView: View {
     @State private var routeTarget: Store?
     @State private var isEditingAlert = false
     @State private var isContributing = false
+    @State private var packSizeModel = PackSizeComparisonViewModel()
 
     private var isWide: Bool { sizeClass != .compact }
 
@@ -259,6 +260,7 @@ struct ProductDetailView: View {
                     routeTarget = store
                 }
             }
+            packSizeSection(referenceUnitPrice: offers.first?.unitPrice)
             contributeLink
             sourceNote
         }
@@ -474,6 +476,101 @@ struct ProductDetailView: View {
             }
             .frame(maxWidth: .infinity)
         }
+    }
+
+    // MARK: - Andere Packungsgrößen (#41)
+
+    @ViewBuilder
+    private func packSizeSection(referenceUnitPrice: UnitPrice?) -> some View {
+        switch packSizeModel.state {
+
+        case .notLoaded:
+            // Auf Abruf: Jede weitere Größe kostet eine eigene Preisabfrage.
+            if model.displayProduct.quantity != nil {
+                Button {
+                    Task {
+                        await packSizeModel.load(reference: model.displayProduct,
+                                                 referenceUnitPrice: referenceUnitPrice,
+                                                 using: appEnvironment)
+                    }
+                } label: {
+                    Label("Andere Packungsgrößen vergleichen", systemImage: "arrow.left.arrow.right")
+                        .font(.cardBody)
+                        .foregroundStyle(Theme.accent)
+                }
+                .buttonStyle(.plain)
+            }
+
+        case .loading:
+            HStack(spacing: Theme.Spacing.s) {
+                ProgressView().tint(Theme.accent)
+                Text("Andere Größen werden geprüft …")
+                    .font(.cardBody)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+        case .noneFound:
+            Text("Zu diesem Produkt sind keine anderen Packungsgrößen mit Preis bekannt.")
+                .font(.cardBody)
+                .foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+
+        case .failed(let message):
+            Text(message)
+                .font(.cardBody)
+                .foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+
+        case .comparisons(let comparisons):
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                SectionHeader(title: "Andere Packungsgrößen")
+                ForEach(comparisons) { comparison in
+                    packSizeRow(comparison)
+                }
+            }
+        }
+    }
+
+    private func packSizeRow(_ comparison: PackSizeComparisonViewModel.Comparison) -> some View {
+        HStack(alignment: .top, spacing: Theme.Spacing.m) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(comparison.product.quantity?.formatted() ?? comparison.product.name)
+                    .font(.cardTitle)
+                    .foregroundStyle(Theme.textPrimary)
+
+                if let storeName = comparison.storeName {
+                    Text(storeName)
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                if let advantage = comparison.advantageText() {
+                    Text(advantage)
+                        .font(.caption)
+                        .foregroundStyle(comparison.advantage.map { $0 < 0 }
+                                         == true ? Theme.priceDown : Theme.priceUp)
+                }
+            }
+
+            Spacer(minLength: Theme.Spacing.s)
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(comparison.bestPrice.roundedToCents.formatted())
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.textPrimary)
+                Text(comparison.unitPrice.formatted())
+                    .font(.caption)
+                    .foregroundStyle(Theme.accent)
+            }
+        }
+        .padding(Theme.Spacing.m)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.tile,
+                                                        style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                .strokeBorder(Theme.surfaceStroke, lineWidth: 1)
+        )
     }
 
     /// Auch wenn es schon Preise gibt, darf man einen neueren beitragen --
