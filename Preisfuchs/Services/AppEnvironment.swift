@@ -14,24 +14,28 @@ final class AppEnvironment {
 
     let settings: AppSettings
     let location: LocationService
+    let notifications: NotificationService
 
     let products: OpenFoodFactsClient
     let prices: OpenPricesClient
     let stores: OverpassClient
 
-    /// `settings` und `location` sind an den Hauptaktor gebunden. Sie duerfen
-    /// deshalb **nicht** als Standardwert eines Parameters entstehen:
-    /// Standardausdruecke werden ausserhalb der Isolierung ausgewertet, auch
-    /// wenn der Initialisierer selbst `@MainActor` ist. Sie werden hier im
-    /// Rumpf erzeugt; die Clients sind einfache Wertetypen ohne Isolierung und
-    /// koennen als Vorgabe stehen bleiben.
+    /// `settings`, `location` und `notifications` sind an den Hauptaktor
+    /// gebunden. Sie duerfen deshalb **nicht** als Standardwert eines
+    /// Parameters entstehen: Standardausdruecke werden ausserhalb der
+    /// Isolierung ausgewertet, auch wenn der Initialisierer selbst
+    /// `@MainActor` ist. Sie werden hier im Rumpf erzeugt; die Clients sind
+    /// einfache Wertetypen ohne Isolierung und koennen als Vorgabe stehen
+    /// bleiben.
     init(settings: AppSettings? = nil,
          location: LocationService? = nil,
+         notifications: NotificationService? = nil,
          products: OpenFoodFactsClient = OpenFoodFactsClient(),
          prices: OpenPricesClient = OpenPricesClient(),
          stores: OverpassClient = OverpassClient()) {
         self.settings = settings ?? AppSettings()
         self.location = location ?? LocationService()
+        self.notifications = notifications ?? NotificationService()
         self.products = products
         self.prices = prices
         self.stores = stores

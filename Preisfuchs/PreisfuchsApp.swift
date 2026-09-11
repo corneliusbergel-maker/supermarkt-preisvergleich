@@ -7,19 +7,56 @@ struct PreisfuchsApp: App {
     /// Eine Umgebung fuer die ganze App, von hier nach unten gereicht.
     @State private var appEnvironment = AppEnvironment()
 
+    /// Favoriten, Einkaufsliste und Preisalarme liegen lokal auf dem Geraet.
+    /// Es gibt keinen Server, auf den sie synchronisiert wuerden.
+    ///
+    /// Der Container wird ausdruecklich hier gebaut statt ueber
+    /// `.modelContainer(for:)`, weil die Hintergrundaufgabe ihn ebenfalls
+    /// braucht -- und die laeuft ausserhalb der Ansichtshierarchie.
+    private let container: ModelContainer
+
+    init() {
+        container = Self.makeContainer()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(appEnvironment)
                 .preferredColorScheme(.dark)
         }
-        // Favoriten, Einkaufsliste und Preisalarme liegen lokal auf dem
-        // Geraet. Es gibt keinen Server, auf den sie synchronisiert wuerden.
-        .modelContainer(for: [
+        .modelContainer(container)
+        // Prueft Preisalarme, wenn iOS der App Rechenzeit gibt. Wann das
+        // geschieht, entscheidet das System -- die App sagt das auch so.
+        .backgroundTask(.appRefresh(PriceAlertService.taskIdentifier)) { [container] in
+            await PriceAlertService.runInBackground(container: container)
+        }
+    }
+
+    /// Faellt auf einen fluechtigen Speicher zurueck, wenn die Datenbank nicht
+    /// geoeffnet werden kann.
+    ///
+    /// Ein Absturz waere hier die schlechtere Antwort: Suche und Preisvergleich
+    /// funktionieren auch ohne gespeicherte Listen weiter.
+    private static func makeContainer() -> ModelContainer {
+        let schema = Schema([
             FavoriteProduct.self,
             ShoppingListEntry.self,
             PriceAlert.self
         ])
+
+        if let container = try? ModelContainer(for: schema) {
+            return container
+        }
+
+        let fallback = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        if let container = try? ModelContainer(for: schema, configurations: fallback) {
+            return container
+        }
+
+        // Beide Wege fehlgeschlagen -- dann ist die Laufzeitumgebung kaputt,
+        // und ein klarer Abbruch ist ehrlicher als stilles Fehlverhalten.
+        fatalError("SwiftData-Container konnte nicht angelegt werden.")
     }
 }
 

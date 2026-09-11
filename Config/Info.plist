@@ -40,6 +40,17 @@
 		<string>comgooglemaps</string>
 	</array>
 
+	<!-- Preisalarme werden auf dem Geraet geprueft, wenn iOS der App
+	     Rechenzeit gibt. Es gibt keinen Server, der das uebernimmt. -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>de.preisfuchs.priceCheck</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

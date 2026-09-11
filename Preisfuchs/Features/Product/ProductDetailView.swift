@@ -13,9 +13,11 @@ struct ProductDetailView: View {
     // ist einfacher und verlaesslicher als ein Praedikat mit eingefangenem Wert.
     @Query private var favorites: [FavoriteProduct]
     @Query private var listEntries: [ShoppingListEntry]
+    @Query private var alerts: [PriceAlert]
 
     @State private var model: ProductDetailViewModel
     @State private var routeTarget: Store?
+    @State private var isEditingAlert = false
 
     private var isWide: Bool { sizeClass != .compact }
 
@@ -29,6 +31,16 @@ struct ProductDetailView: View {
 
     private var isOnShoppingList: Bool {
         listEntries.contains { $0.productID == model.displayProduct.id }
+    }
+
+    private var existingAlert: PriceAlert? {
+        alerts.first { $0.productID == model.displayProduct.id }
+    }
+
+    /// Der günstigste gerade angezeigte Preis, falls es einen gibt.
+    private var bestPrice: Money? {
+        guard case .loaded(let comparison) = model.state else { return nil }
+        return comparison.offers.first?.price
     }
 
     var body: some View {
@@ -49,6 +61,11 @@ struct ProductDetailView: View {
         .task { await model.load(using: appEnvironment) }
         .sheet(item: $routeTarget) { store in
             RouteSheet(store: store)
+        }
+        .sheet(isPresented: $isEditingAlert) {
+            PriceAlertSheet(product: model.displayProduct,
+                            currentBest: bestPrice,
+                            existing: existingAlert)
         }
     }
 
@@ -99,7 +116,12 @@ struct ProductDetailView: View {
     // MARK: - Aktionen
 
     private var actionRow: some View {
-        HStack(spacing: Theme.Spacing.m) {
+        // Raster statt fester Zeile: Auf schmalen Geräten und bei großer
+        // Schrift brechen die Knöpfe um, statt zu zerquetschen.
+        LazyVGrid(
+            columns: [GridItem(.adaptive(minimum: 150), spacing: Theme.Spacing.m)],
+            spacing: Theme.Spacing.m
+        ) {
             actionButton(
                 title: isFavorite ? "Favorit" : "Favorisieren",
                 symbol: isFavorite ? "star.fill" : "star",
@@ -113,7 +135,19 @@ struct ProductDetailView: View {
                 isActive: isOnShoppingList,
                 action: toggleShoppingList
             )
+
+            actionButton(
+                title: alertTitle,
+                symbol: existingAlert == nil ? "bell" : "bell.fill",
+                isActive: existingAlert != nil,
+                action: { isEditingAlert = true }
+            )
         }
+    }
+
+    private var alertTitle: String {
+        guard let threshold = existingAlert?.threshold else { return "Preisalarm" }
+        return "unter \(threshold.roundedToCents.formatted())"
     }
 
     private func actionButton(title: String,
