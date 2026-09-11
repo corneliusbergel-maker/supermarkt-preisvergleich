@@ -22,6 +22,9 @@ struct SearchView: View {
         .background(Theme.ink)
         .navigationTitle("Suche")
         .searchable(text: $model.query, prompt: "Produkt suchen")
+        .navigationDestination(for: Product.self) { product in
+            ProductDetailView(product: product)
+        }
         // An den Suchtext gebunden: Tippt der Nutzer weiter, bricht SwiftUI
         // den laufenden Aufruf ab, bevor daraus eine Anfrage wird.
         .task(id: model.query) { await model.search() }
@@ -74,9 +77,12 @@ struct SearchView: View {
 
         case .results(let groups):
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                SectionHeader(title: "\(groups.count) Artikel gefunden")
+                SectionHeader(title: "\(groups.count) \(groups.count == 1 ? "Artikel" : "Artikel") gefunden")
                 ForEach(groups) { group in
-                    ProductRow(product: group.representative)
+                    NavigationLink(value: group.representative) {
+                        ProductRow(product: group.representative)
+                    }
+                    .buttonStyle(.plain)
                 }
                 attributionNote
             }
