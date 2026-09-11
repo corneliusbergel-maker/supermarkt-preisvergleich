@@ -110,6 +110,67 @@ jobs:
             echo "❌ ${{ matrix.name }} schlaegt fehl." >> "$GITHUB_STEP_SUMMARY"
           fi
 
+  ipa:
+    name: Unsignierte IPA bauen
+    runs-on: macos-latest
+    needs: app
+
+    steps:
+      - name: Quellcode holen
+        uses: actions/checkout@v7
+
+      - name: Fuer das Geraet archivieren
+        run: |
+          # Ohne Signatur: Die Signatur setzt ein Apple-Entwicklerkonto
+          # voraus, das an diesen Runner nicht gebunden ist. Signiert wird
+          # spaeter auf dem Windows-Rechner mit der eigenen Apple-ID.
+          if ! xcodebuild archive \
+              -project Preisfuchs.xcodeproj \
+              -scheme Preisfuchs \
+              -configuration Release \
+              -destination 'generic/platform=iOS' \
+              -archivePath build/Preisfuchs.xcarchive \
+              -skipMacroValidation \
+              CODE_SIGNING_ALLOWED=NO \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGN_ENTITLEMENTS="" \
+              > archive.log 2>&1; then
+            echo "::group::Fehler"
+            grep -E "error:" archive.log | head -40 || tail -80 archive.log
+            echo "::endgroup::"
+            exit 1
+          fi
+
+      - name: Zur IPA verpacken
+        run: |
+          set -euo pipefail
+          APP="build/Preisfuchs.xcarchive/Products/Applications/Preisfuchs.app"
+          if [ ! -d "$APP" ]; then
+            echo "Erwartete App nicht gefunden. Inhalt des Archivs:"
+            find build/Preisfuchs.xcarchive/Products -maxdepth 3
+            exit 1
+          fi
+
+          # Eine IPA ist nichts weiter als ein Zip mit einem Ordner "Payload".
+          mkdir -p build/Payload
+          cp -R "$APP" build/Payload/
+          (cd build && zip -qry Preisfuchs-unsigned.ipa Payload)
+
+          ls -lh build/Preisfuchs-unsigned.ipa
+          echo "### Unsignierte IPA gebaut" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Sie ist **nicht** signiert und laesst sich so nicht installieren." >> "$GITHUB_STEP_SUMMARY"
+          echo "Signieren mit der eigenen Apple-ID - siehe AUF-DEM-IPHONE.md." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Hochladen
+        uses: actions/upload-artifact@v7
+        with:
+          name: Preisfuchs-unsigned-ipa
+          path: build/Preisfuchs-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 90
+
   screenshots:
     name: Screenshots (${{ matrix.device }})
     runs-on: macos-latest
