@@ -310,6 +310,10 @@ struct ProductDetailView: View {
 
                 confidenceBadge(for: offer)
 
+                if let change = model.priceChange, change.isWorthShowing {
+                    priceChangeRow(change)
+                }
+
                 if let store = offer.observation.store {
                     Button {
                         routeTarget = store
@@ -325,6 +329,31 @@ struct ProductDetailView: View {
                 }
             }
         }
+    }
+
+    /// Preisänderung gegenüber der letzten abweichenden Beobachtung (#25).
+    ///
+    /// Grün bedeutet hier „günstiger geworden", nicht „gut" – und Rot ist
+    /// bewusst der Angebotsfarbe ähnlich, weil beides eine Preisaussage ist.
+    private func priceChangeRow(_ change: PriceChange) -> some View {
+        HStack(spacing: Theme.Spacing.s) {
+            Image(systemName: change.direction == .down ? "arrow.down" : "arrow.up")
+                .font(.system(size: 12, weight: .bold))
+
+            if let percent = change.percentText() {
+                Text(percent)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+            }
+
+            if let summary = change.summary() {
+                Text(summary)
+                    .font(.cardBody)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+        }
+        .foregroundStyle(change.direction == .down ? Theme.priceDown : Theme.priceUp)
+        .accessibilityElement(children: .combine)
     }
 
     private func confidenceBadge(for offer: PriceOffer) -> some View {

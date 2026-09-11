@@ -74,6 +74,10 @@ final class ProductDetailViewModel {
     private(set) var history: History?
     private(set) var detour: DetourAdvice?
 
+    /// Veränderung gegenüber der letzten abweichenden Beobachtung (#25).
+    /// `nil`, wenn es keine verwertbare Vorgeschichte gibt.
+    private(set) var priceChange: PriceChange?
+
     /// Wie viele Preise es vor dem Anwenden der Filter gab -- damit die
     /// Oberfläche sagen kann, was der Filter gerade verbirgt.
     private(set) var totalBeforeFilter = 0
@@ -95,6 +99,7 @@ final class ProductDetailViewModel {
         state = .loading
         detour = nil
         history = nil
+        priceChange = nil
 
         let settings = environment.settings
         let coordinate = environment.activeCoordinate
@@ -163,6 +168,7 @@ final class ProductDetailViewModel {
         ) else { return }
 
         history = makeHistory(from: observations)
+        priceChange = PriceChange.fromObservations(observations)
     }
 
     func makeHistory(from observations: [PriceObservation]) -> History? {

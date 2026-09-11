@@ -21,6 +21,7 @@ struct HomeView: View {
     @State private var query = ""
     @State private var isScanning = false
     @State private var favoritesModel = FavoritesViewModel()
+    @State private var dealsModel = DealsViewModel()
 
     private var isWide: Bool { sizeClass != .compact }
 
@@ -189,13 +190,70 @@ struct HomeView: View {
         Array(favorites.prefix(4))
     }
 
-    // MARK: - Deals
+    // MARK: - Deals (#28)
 
     private var dealsSection: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             SectionHeader(title: "Deine besten Deals")
-            DevelopmentNotice(feature: "Die Angebotserkennung",
-                              dataSource: "Open Prices")
+
+            switch dealsModel.state {
+
+            case .idle, .loading:
+                GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
+                    HStack(spacing: Theme.Spacing.m) {
+                        ProgressView().tint(Theme.accent)
+                        Text("Angebote in deiner Nähe werden gesucht …")
+                            .font(.cardBody)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                }
+
+            case .needsLocation:
+                GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                        Label("Kein Bezugspunkt", systemImage: "location.slash")
+                            .font(.cardTitle)
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Angebote hängen davon ab, wo du bist. Gib den Standort frei "
+                             + "oder wähle in den Einstellungen einen Ort.")
+                            .font(.cardBody)
+                            .foregroundStyle(Theme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+            case .empty:
+                GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
+                    Text("Gerade sind keine Aktionspreise in deiner Nähe belegt. "
+                         + "Angebote stehen nur dann hier, wenn sie jemand mit Beleg "
+                         + "eingetragen hat – erfunden wird keines.")
+                        .font(.cardBody)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+            case .failed(let message):
+                GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
+                    Text(message)
+                        .font(.cardBody)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+            case .deals(let deals):
+                ForEach(deals) { deal in
+                    if let product = deal.product {
+                        NavigationLink(value: product) {
+                            DealRow(deal: deal)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .task(id: favorites.count) {
+            await dealsModel.load(using: appEnvironment,
+                                  favoriteIDs: Set(favorites.map(\.productID)))
         }
     }
 }

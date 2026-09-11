@@ -184,44 +184,6 @@ struct EmptyState: View {
     }
 }
 
-/// Kennzeichnet Bereiche, deren echte Datenquelle noch nicht angebunden ist.
-///
-/// Anforderung #38: Es darf nie so aussehen, als zeige die App echte Daten,
-/// solange die Quelle fehlt. Statt Beispielinhalten steht hier der
-/// Entwicklungsstand.
-struct DevelopmentNotice: View {
-
-    let feature: String
-    let dataSource: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: Theme.Spacing.m) {
-            Image(systemName: "hammer.fill")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Theme.textTertiary)
-                .padding(.top, 2)
-
-            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                Text("\(feature) ist noch nicht angebunden")
-                    .font(.cardTitle)
-                    .foregroundStyle(Theme.textPrimary)
-                Text("Sobald \(dataSource) angebunden ist, stehen hier echte Daten. "
-                     + "Bis dahin werden hier bewusst keine Beispielwerte angezeigt.")
-                    .font(.cardBody)
-                    .foregroundStyle(Theme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(Theme.Spacing.l)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
-                .strokeBorder(Theme.surfaceStroke, style: StrokeStyle(lineWidth: 1, dash: [5, 4]))
-        )
-    }
-}
-
 // MARK: - Kacheln
 
 /// Die Schnellaktionen aus dem Referenzbild: Symbol oben links, Titel unten.

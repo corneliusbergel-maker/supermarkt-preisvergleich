@@ -74,13 +74,17 @@ public struct OpenPricesClient: Sendable {
     }
 
     /// Aktuelle Aktionspreise im Umkreis.
+    ///
+    /// Liefert den Preis **zusammen mit dem Produkt**, soweit Open Prices es
+    /// mitgibt. Ohne Namen wäre ein Angebot in einer Liste nicht brauchbar --
+    /// und der Umweg über eine zweite Abfrage je Treffer wäre unverhältnismäßig.
     public func discountedPrices(near: Coordinate,
                                  radiusKm: Double = 25,
                                  notOlderThan: Date,
-                                 limit: Int = 50) async throws -> [PriceObservation] {
+                                 limit: Int = 50) async throws -> [PricedProduct] {
         guard near.isValid else { return [] }
 
-        return try await fetch([
+        return try await fetchPriced([
             URLQueryItem(name: "price_is_discounted", value: "true"),
             URLQueryItem(name: "lat", value: String(near.latitude)),
             URLQueryItem(name: "lon", value: String(near.longitude)),
@@ -93,7 +97,20 @@ public struct OpenPricesClient: Sendable {
 
     // MARK: - Innereien
 
+    private func fetchPriced(_ queryItems: [URLQueryItem]) async throws -> [PricedProduct] {
+        try await fetchPage(queryItems).items.compactMap { item in
+            guard let observation = item.toObservation() else { return nil }
+            return PricedProduct(observation: observation,
+                                 product: item.product?.toProduct(),
+                                 discountPercent: item.discountPercent)
+        }
+    }
+
     private func fetch(_ queryItems: [URLQueryItem]) async throws -> [PriceObservation] {
+        try await fetchPage(queryItems).items.compactMap { $0.toObservation() }
+    }
+
+    private func fetchPage(_ queryItems: [URLQueryItem]) async throws -> OpenPricesPage {
         var components = URLComponents()
         components.scheme = "https"
         components.host = host
@@ -108,14 +125,11 @@ public struct OpenPricesClient: Sendable {
 
         let data = try await runner.run(request)
 
-        let page: OpenPricesPage
         do {
-            page = try JSONDecoder().decode(OpenPricesPage.self, from: data)
+            return try JSONDecoder().decode(OpenPricesPage.self, from: data)
         } catch {
             throw DataSourceError.decoding(String(describing: error))
         }
-
-        return page.items.compactMap { $0.toObservation() }
     }
 
     static let dayFormatter: DateFormatter = {
@@ -125,6 +139,28 @@ public struct OpenPricesClient: Sendable {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
+}
+
+/// Ein Preis zusammen mit dem Produkt, zu dem er gehoert.
+public struct PricedProduct: Sendable, Identifiable {
+
+    public let observation: PriceObservation
+
+    /// `nil`, wenn Open Prices zu dem Barcode keinen Produktdatensatz fuehrt.
+    /// Dann fehlt der Name -- und die App zeigt den Eintrag nicht an, statt
+    /// einen Platzhalter zu erfinden.
+    public let product: Product?
+
+    /// Rabatt in ganzen Prozent, nur wenn der Ursprungspreis bekannt ist.
+    public let discountPercent: Int?
+
+    public var id: String { observation.id }
+
+    public init(observation: PriceObservation, product: Product?, discountPercent: Int?) {
+        self.observation = observation
+        self.product = product
+        self.discountPercent = discountPercent
+    }
 }
 
 // MARK: - Uebertragungsformate
@@ -150,8 +186,13 @@ struct OpenPricesItemDTO: Decodable {
     let location: OpenPricesLocationDTO?
     let proof: OpenPricesProofDTO?
 
+    /// Open Prices haengt den Produktdatensatz mit an. Die Feldnamen stimmen
+    /// mit denen von Open Food Facts ueberein, deshalb laesst sich derselbe
+    /// Decoder verwenden.
+    let product: OpenFoodFactsProductDTO?
+
     enum CodingKeys: String, CodingKey {
-        case id, price, currency, date, source, owner, location, proof
+        case id, price, currency, date, source, owner, location, proof, product
         case priceIsDiscounted = "price_is_discounted"
         case priceWithoutDiscount = "price_without_discount"
         case productCode = "product_code"
