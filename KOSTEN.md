@@ -42,11 +42,23 @@ App selbst, sondern Apples Vertriebsweg:
 | | |
 |---|---|
 | **Kosten** | 0 € — Teil desselben Projekts |
-| **API-Key** | Lesen: nein. **Schreiben**: Bearer-Token aus kostenlosem Open-Food-Facts-Konto |
+| **API-Key** | Lesen: nein. **Schreiben**: Bearer-Token aus kostenlosem Open-Food-Facts-Konto — siehe „Preise beitragen" unten |
 | **Lizenz** | ODbL |
 | **Limits** | Keine Rate-Limit-Header gefunden (geprüft 2026-09-10). Pagination über `size`/`page`. |
 | **Kostenrisiko** | Sehr gering, siehe oben. |
 | **Unsere Maßnahme** | Ergebnisse cachen, `size` begrenzen, keine Hintergrund-Dauerabfragen. |
+
+### Preise beitragen — ebenfalls 0 €
+
+Wer selbst Preise einträgt, braucht ein **kostenloses Konto bei Open Food
+Facts**. Keine Zahlungsdaten, kein Abo, keine Gebühr — das Konto dient nur
+dazu, dass die Datenbank nachvollziehen kann, woher ein Preis stammt.
+
+Technisch: Benutzername und Kennwort holen einmalig einen Zugangstoken
+(`POST /api/v1/auth`). Das Kennwort wird **nicht gespeichert**, der Token
+liegt im Schlüsselbund des Geräts. Beiträge stehen anschließend unter ODbL
+allen zur Verfügung — das ist der Grund, warum die Daten in dieser App nichts
+kosten.
 
 ### Overpass API / OpenStreetMap (Filialen)
 

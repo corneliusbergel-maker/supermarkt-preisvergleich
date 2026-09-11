@@ -78,6 +78,29 @@ image_url:        https://images.openfoodfacts.org/.../front_en.563.400.jpg
 - **Liefert:** Barcode, Name, Marke, Menge + normalisierte Menge in ml/g,
   Kategorien, Labels, Produktbild, Nutri-Score.
 - **Liefert NICHT:** Preise.
+
+#### Nachtrag 2026-09-11: zwei Suchwege, nicht einer
+
+Für die Freitextsuche gibt es zwei Dienste, und der Unterschied ist wichtig:
+
+| Dienst | Antwortzeit | `product_quantity` | Verlässlichkeit |
+|---|---|---|---|
+| `search.openfoodfacts.org/search` | ~0,3 s | ❌ nur Freitext | gut |
+| `world.openfoodfacts.org/cgi/search.pl` | schwankend | ✅ normalisiert | **schlecht** |
+
+Gemessen am 2026-09-11: Die klassische Route antwortete **dreimal
+hintereinander mit HTTP 503**, während der Index in 0,3 s lieferte.
+
+Konsequenz: Der Index ist der Hauptweg, die klassische Route springt nur bei
+einer vorübergehenden Störung ein. Da der Index keine normalisierte Menge
+führt, kommt sie dort aus dem Freitext (`"600 g"`); lässt der sich nicht
+deuten, lädt die Produktdetailseite den vollständigen Datensatz über
+`/api/v2/product/{code}` nach.
+
+Zweiter Unterschied, der leicht übersehen wird: `brands` ist im Index ein
+**Feld** (`["Ferrero","Nutella"]`), in der klassischen Route ein
+kommagetrennter **Text**. Ein Decoder für nur eine Form verliert je nach
+Quelle die Marke — und damit die Markenprüfung im Produktabgleich.
 - **Rolle:** Produktkatalog, Barcode-Auflösung, Grundlage für die
   Grundpreisberechnung (`product_quantity` ist maschinenlesbar) und für das
   Produkt-Matching (gleicher Barcode = garantiert gleiches Produkt).
@@ -340,11 +363,12 @@ einzige Teil, den man ohne iOS-Simulator testen kann:
 | 17 | Einkaufsliste | ✅ voll (lokal) |
 | 29/30/31 | Filter, Radius, Sortierung | ✅ voll |
 | 32/33 | Offline, Fehlerbehandlung | ✅ voll |
-| 7 | **Preisvergleich** | ⚠️ **nur wo Daten existieren** – oft leer |
-| 12 | Angebotserkennung | ⚠️ nur wo `price_is_discounted` gesetzt ist |
-| 10 | Preisverlauf | ⚠️ nur bei genügend Datenpunkten, sonst ausgeblendet |
-| 16/18 | Günstigster Markt / Korb-Optimierung | ⚠️ rechnet korrekt, Basis oft unvollständig |
+| 7 | **Preisvergleich** | ✅ gebaut — ⚠️ zeigt nur, was an Daten existiert |
+| 12 | Angebotserkennung | ✅ gebaut — ⚠️ nur wo `price_is_discounted` gesetzt ist |
+| 10 | Preisverlauf | ✅ gebaut — erscheint erst ab 4 Beobachtungen |
+| 16/18 | Günstigster Markt / Korb-Optimierung | ✅ gebaut — ⚠️ Basis oft unvollständig |
 | 25 | Preisänderungen | ⚠️ nur bei vorhandener Historie |
+| – | **Preise beitragen** | ✅ gebaut — Preisschild fotografieren, Beleg + Preis an Open Prices |
 | 11/27 | Preisalarm + Benachrichtigung | ⚠️ **lokal** (kostenlos, aber von iOS opportunistisch geplant). Echter Push nur mit Developer-Programm 99 €/Jahr – siehe [KOSTEN.md](KOSTEN.md) |
 | 41 | Preisprognose | ⚠️ nur bei ausreichender Historie – sonst gar nicht anzeigen |
 | – | Echtzeit-Verfügbarkeit im Regal | ❌ **keine legale Quelle. Wird nicht gebaut.** |

@@ -55,8 +55,11 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | Barcode-Scanner (VisionKit) | ✅ fertig |
 | Einkaufslisten-Optimierung in der Oberfläche | ✅ läuft |
 | Preisalarme (lokal, BGAppRefreshTask) | ✅ fertig |
-| Preise beitragen (Preisschild fotografieren) | ⏳ als Nächstes |
-| Filialübersicht mit Karte | ⏳ danach |
+| Preise beitragen (Preisschild fotografieren) | ✅ fertig |
+| Filialübersicht mit Karte | ✅ fertig |
+| Manuelle Ortswahl (MKLocalSearch) | ✅ fertig |
+| Kamera direkt in der App (statt Fotoauswahl) | ⏳ als Nächstes |
+| App-Icon, Privacy Manifest, Store-Reife | ⏳ danach |
 
 ---
 
