@@ -29,6 +29,16 @@ final class DecimalParsingTests: XCTestCase {
         XCTAssertEqual(DecimalParsing.decimal(from: "1,234.56"), Decimal(string: "1234.56"))
     }
 
+    /// `NumberFormatter` setzt im Deutschen ein schmales geschuetztes
+    /// Leerzeichen (U+202F) vor das Waehrungszeichen. Wer einen so
+    /// formatierten Betrag einfuegt, soll damit nicht scheitern.
+    func testAllKindsOfSpacesAreIgnored() {
+        XCTAssertEqual(DecimalParsing.decimal(from: "1 234,56"), Decimal(string: "1234.56"))
+        XCTAssertEqual(DecimalParsing.decimal(from: "1\u{00A0}234,56"), Decimal(string: "1234.56"))
+        XCTAssertEqual(DecimalParsing.decimal(from: "1\u{202F}234,56"), Decimal(string: "1234.56"))
+        XCTAssertEqual(DecimalParsing.decimal(from: "  3,50\u{202F}"), Decimal(string: "3.5"))
+    }
+
     func testGarbageReturnsNilInsteadOfZero() {
         // Wichtig: kein stiller Fallback auf 0 -- das waere ein erfundener Wert.
         XCTAssertNil(DecimalParsing.decimal(from: "abc"))

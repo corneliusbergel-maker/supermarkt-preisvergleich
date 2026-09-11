@@ -86,16 +86,34 @@ final class PriceChangeTests: XCTestCase {
         XCTAssertNil(change)
     }
 
+    /// Der erwartete Betrag wird aus demselben Formatierer gebaut, nicht
+    /// abgetippt.
+    ///
+    /// Grund: `NumberFormatter` setzt im Deutschen ein **schmales geschütztes**
+    /// Leerzeichen zwischen Zahl und Währungszeichen, kein gewöhnliches. Ein
+    /// fest eingetragener Erwartungstext prüft damit die Typografie des
+    /// Systems statt der eigenen Logik -- und bricht, sobald Apple sie
+    /// anpasst. Geprüft werden soll hier, dass Betrag, Richtungswort und
+    /// Zeitangabe richtig zusammengesetzt werden.
     func testDayCountAndWording() throws {
+        let fiftyCents = euro("0.50").formatted()
+
         let yesterday = try XCTUnwrap(PriceChange(previous: euro("2.00"), previousDate: day(1),
                                                   current: euro("1.50"), currentDate: day(0)))
         XCTAssertEqual(yesterday.dayCount, 1)
-        XCTAssertEqual(yesterday.summary(), "0,50 € günstiger als gestern")
+        XCTAssertEqual(yesterday.summary(), "\(fiftyCents) günstiger als gestern")
 
         let older = try XCTUnwrap(PriceChange(previous: euro("2.00"), previousDate: day(14),
                                               current: euro("2.50"), currentDate: day(0)))
         XCTAssertEqual(older.dayCount, 14)
-        XCTAssertEqual(older.summary(), "0,50 € teurer als vor 14 Tagen")
+        XCTAssertEqual(older.summary(), "\(fiftyCents) teurer als vor 14 Tagen")
+    }
+
+    func testWordingForSameDay() throws {
+        let sameDay = try XCTUnwrap(PriceChange(previous: euro("2.00"), previousDate: day(0),
+                                                current: euro("1.80"), currentDate: day(0)))
+        XCTAssertEqual(sameDay.dayCount, 0)
+        XCTAssertEqual(sameDay.summary()?.hasSuffix("günstiger als zuletzt"), true)
     }
 }
 

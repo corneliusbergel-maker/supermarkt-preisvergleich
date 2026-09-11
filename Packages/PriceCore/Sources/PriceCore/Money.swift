@@ -114,9 +114,14 @@ public enum DecimalParsing {
     ///    der Teil davor ist "0" ("0,500 kg" = 0,5 kg).
     /// 3. Sonst ist es ein Dezimaltrennzeichen.
     public static func decimal(from raw: String) -> Decimal? {
-        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        text = text.replacingOccurrences(of: "\u{00A0}", with: "")  // geschuetztes Leerzeichen
-        text = text.replacingOccurrences(of: " ", with: "")
+        // Alle Arten von Zwischenraum entfernen, nicht nur das gewoehnliche
+        // Leerzeichen. `NumberFormatter` setzt im Deutschen ein **schmales
+        // geschuetztes** Leerzeichen (U+202F) vor das Waehrungszeichen; andere
+        // Gebietsschemata nutzen es als Tausendertrennzeichen. Wer einen
+        // formatierten Betrag einfuegt, soll damit nicht scheitern.
+        var text = String(raw.unicodeScalars.filter {
+            !CharacterSet.whitespacesAndNewlines.contains($0)
+        })
         guard !text.isEmpty else { return nil }
 
         let hasDot = text.contains(".")
