@@ -51,9 +51,10 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 | Standort (CoreLocation), Einstellungen | ✅ fertig |
 | **Produktsuche mit echten Daten** | ✅ läuft |
 | **Produktdetail: Preisvergleich, Verlauf, Route** | ✅ läuft |
-| SwiftData: Favoriten, Liste, Alarme | ⏳ als Nächstes |
-| Barcode-Scanner (VisionKit) | ⏳ danach |
-| Einkaufslisten-Optimierung in der Oberfläche | ⏳ danach |
+| SwiftData: Favoriten, Einkaufsliste, Alarme | ✅ fertig |
+| Barcode-Scanner (VisionKit) | ⏳ als Nächstes |
+| Einkaufslisten-Optimierung in der Oberfläche | ✅ läuft |
+| Preisalarme auslösen (BGAppRefreshTask) | ⏳ danach |
 
 ---
 
@@ -61,28 +62,39 @@ Der Code entsteht hier, kompiliert wird dort. Siehe Abschnitt „Build".
 
 ```
 Supermarkt App/
-├── ARCHITEKTUR.md
-├── KOSTEN.md
-├── README.md
-└── Packages/
-    └── PriceCore/              Rechenlogik, plattformunabhängig
-        ├── Package.swift
-        ├── Sources/PriceCore/
-        │   ├── Money.swift           Decimal-Geldbeträge, Dezimalparsing
-        │   ├── Quantity.swift        Mengen ("6 x 1,5 l") normalisieren
-        │   ├── UnitPrice.swift       Grundpreis nach PAngV
-        │   ├── Product.swift         Produktmodell + Textnormalisierung
-        │   ├── ProductMatcher.swift  Ist das dasselbe Produkt?
-        │   ├── PriceObservation.swift Preis + Herkunft + Verlässlichkeit
-        │   ├── PriceComparator.swift Sortieren, filtern, Umweg abwägen
-        │   └── GeoDistance.swift     Luftlinie (Haversine)
-        └── Tests/PriceCoreTests/     ~70 Tests
+├── Preisfuchs.xcodeproj/        Xcode-Projekt (synchronisierte Ordnergruppen)
+├── Config/Info.plist
+├── Preisfuchs/                  App-Target (SwiftUI)
+│   ├── PreisfuchsApp.swift
+│   ├── DesignSystem/            Farben, Typografie, Karten, Leerzustände
+│   ├── Navigation/              Tab-Leiste bzw. Seitenleiste je nach Breite
+│   ├── Persistence/             SwiftData: Favoriten, Liste, Alarme
+│   ├── Services/                Standort, Einstellungen, Routen, Umgebung
+│   └── Features/                Home · Suche · Produkt · Liste · Favoriten · Einstellungen
+└── Packages/PriceCore/
+    ├── Sources/PriceCore/       Rechenlogik, ohne Netz und ohne SwiftUI
+    │   ├── Money.swift              Decimal-Geldbeträge, Dezimalparsing
+    │   ├── Quantity.swift           Mengen ("6 x 1,5 l") normalisieren
+    │   ├── UnitPrice.swift          Grundpreis nach PAngV
+    │   ├── Product.swift            Produktmodell + Textnormalisierung
+    │   ├── ProductMatcher.swift     Ist das dasselbe Produkt?
+    │   ├── RetailerRegistry.swift   „Rewe" und „REWE" sind eine Kette
+    │   ├── PriceObservation.swift   Preis + Herkunft + Verlässlichkeit
+    │   ├── PriceComparator.swift    Sortieren, filtern, Umweg abwägen
+    │   ├── BasketOptimizer.swift    Günstigster Gesamteinkauf
+    │   └── GeoDistance.swift        Luftlinie (Haversine)
+    ├── Sources/PriceData/       Anbindung der Datenquellen
+    │   ├── HTTP.swift               Transport, Fehlerarten, Wiederholung
+    │   ├── OpenFoodFactsClient.swift
+    │   ├── OpenPricesClient.swift
+    │   └── OverpassClient.swift     serialisiert + zwischengespeichert
+    └── Tests/                    172 Tests
 ```
 
-`PriceCore` enthält bewusst **kein** SwiftUI und keine Fremdbibliothek. Damit
-lässt es sich auf jedem Mac ohne Xcode-Projekt und ohne Simulator prüfen — der
-einzige Teil des Projekts, der von Windows aus überhaupt verifizierbar
-vorbereitet werden kann.
+`PriceCore` und `PriceData` enthalten bewusst **kein** SwiftUI und keine
+Fremdbibliothek. Damit lassen sie sich auf jedem Mac ohne Xcode-Projekt und
+ohne Simulator prüfen. Kein Test ruft eine echte API auf — die Testvorlagen
+sind aufgezeichnete echte Antworten.
 
 ---
 
