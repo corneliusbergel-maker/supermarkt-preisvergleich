@@ -53,16 +53,35 @@ Sideloadly vergibt automatisch eine eindeutige Bundle-Kennung, falls
 
 1. [3u.com](https://www.3u.com) herunterladen und installieren
 2. iPhone anschließen
-3. **Toolbox → IPA signature → Sign with Apple ID**
-4. IPA wählen, Apple-ID eintragen, Gerät auswählen
-5. Signieren, dann installieren
+3. **Toolbox → IPA Signature**, rechts den Reiter **Apple ID Signing** wählen
+4. **Add ID** → Apple-ID eintragen; darunter erscheint die Gerätekennung (UDID)
+   deines iPhones. Der blaue Punkt muss bei dieser ID stehen.
+5. Oben links **Add IPA Files** → `Preisfuchs-unsigned.ipa` wählen
+6. **Sign Now** — der Knopf wird erst aktiv, wenn eine IPA in der Liste steht
+7. Installieren: oben rechts das **Download-Symbol** (Pfeil im Kreis) →
+   Download Center → bei Preisfuchs auf **Install**.
+   Alternativ: **iDevice → Apps → Import & Install IPA** und die signierte
+   Datei aus `Dokumente` wählen.
 
 Beide binden die Signatur an die **Gerätekennung** deines iPhones. Eine so
 signierte Datei lässt sich auf keinem anderen Gerät installieren.
 
 ---
 
-## Schritt 3 — Entwickler vertrauen
+## Schritt 3 — Entwicklermodus einschalten
+
+**Ab iOS 16 Pflicht.** Ohne ihn lässt sich eine selbst signierte App zwar
+installieren, startet aber nicht. (In der ersten Fassung dieser Anleitung
+fehlte der Schritt.)
+
+1. **Einstellungen → Datenschutz & Sicherheit → Entwicklermodus** → einschalten
+2. iOS verlangt einen **Neustart** — bestätigen
+3. Nach dem Neustart erscheint eine Abfrage → **Aktivieren** → Gerätecode eingeben
+
+Der Eintrag „Entwicklermodus" taucht erst auf, **nachdem** eine selbst
+signierte App installiert wurde. Fehlt er, zuerst Schritt 2 abschließen.
+
+## Schritt 4 — Entwickler vertrauen
 
 Beim ersten Start meldet iOS „Nicht vertrauenswürdiger Entwickler".
 
@@ -140,6 +159,8 @@ Fehlermeldung.
 
 | Symptom | Ursache |
 |---|---|
+| App ist installiert, startet aber nicht | **Entwicklermodus** fehlt → Schritt 3 |
+| „Sign Now" bleibt grau | Noch keine IPA in der Liste → „Add IPA Files" |
 | „Unable to install" | Bundle-Kennung schon vergeben → im Werkzeug eine andere setzen |
 | App stürzt sofort ab | Meist die Hintergrundaufgaben-Kennung; siehe [INSTALLATION.md](INSTALLATION.md) |
 | Gerät wird nicht erkannt | Apple Devices oder iTunes fehlt → USB-Treiber |
