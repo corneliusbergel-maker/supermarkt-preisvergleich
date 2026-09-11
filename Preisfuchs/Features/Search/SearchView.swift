@@ -3,8 +3,11 @@ import PriceCore
 
 struct SearchView: View {
 
+    @Binding var path: NavigationPath
+
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var model = SearchViewModel()
+    @State private var isScanning = false
 
     private var isWide: Bool { sizeClass != .compact }
 
@@ -30,6 +33,11 @@ struct SearchView: View {
         .navigationDestination(for: Product.self) { product in
             ProductDetailView(product: product)
         }
+        .sheet(isPresented: $isScanning) {
+            BarcodeScanSheet { product in
+                path.append(product)
+            }
+        }
         // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
         // die Suche läuft danach ganz normal gegen die echte API.
         .task {
@@ -47,7 +55,9 @@ struct SearchView: View {
     @ViewBuilder
     private var scannerRow: some View {
         if Platform.supportsBarcodeScanner {
-            ActionTile(symbol: "barcode.viewfinder", title: "Barcode scannen") {}
+            ActionTile(symbol: "barcode.viewfinder", title: "Barcode scannen") {
+                isScanning = true
+            }
         } else {
             GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
                 Label("Barcode-Scannen ist nur auf iPhone und iPad verfügbar.",

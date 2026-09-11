@@ -122,8 +122,10 @@ struct RootView: View {
     @ViewBuilder
     private func screen(for destination: Destination) -> some View {
         switch destination {
-        case .home: HomeView()
-        case .search: SearchView()
+        // Start und Suche koennen nach einem Scan direkt auf die Produktseite
+        // springen und brauchen dafuer den Navigationspfad.
+        case .home: HomeView(path: $path, selection: $selection)
+        case .search: SearchView(path: $path)
         case .shoppingList: ShoppingListView()
         case .favorites: FavoritesView()
         case .settings: SettingsView()

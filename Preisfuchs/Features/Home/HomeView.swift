@@ -1,4 +1,6 @@
+import SwiftData
 import SwiftUI
+import PriceCore
 
 /// Die Startseite: persoenliches Preis-Dashboard.
 ///
@@ -7,8 +9,18 @@ import SwiftUI
 /// Anforderung #38.
 struct HomeView: View {
 
+    @Binding var path: NavigationPath
+    @Binding var selection: Destination
+
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(AppEnvironment.self) private var appEnvironment
+
+    @Query(sort: \FavoriteProduct.addedAt, order: .reverse)
+    private var favorites: [FavoriteProduct]
+
     @State private var query = ""
+    @State private var isScanning = false
+    @State private var favoritesModel = FavoritesViewModel()
 
     private var isWide: Bool { sizeClass != .compact }
 
@@ -28,6 +40,14 @@ struct HomeView: View {
         .background(Theme.ink)
         .navigationTitle("Start")
         .toolbar(isWide ? .visible : .hidden, for: .navigationBar)
+        .navigationDestination(for: Product.self) { product in
+            ProductDetailView(product: product)
+        }
+        .sheet(isPresented: $isScanning) {
+            BarcodeScanSheet { product in
+                path.append(product)
+            }
+        }
     }
 
     // MARK: - Kopfbereich mit Verlauf
@@ -67,14 +87,20 @@ struct HomeView: View {
                 .textFieldStyle(.plain)
                 .foregroundStyle(.white)
                 .submitLabel(.search)
+                .onSubmit { selection = .search }
 
             if Platform.supportsBarcodeScanner {
                 Divider()
                     .frame(height: 20)
                     .overlay(Color.white.opacity(0.25))
-                Image(systemName: "barcode.viewfinder")
-                    .foregroundStyle(.white.opacity(0.85))
-                    .accessibilityLabel("Barcode scannen")
+                Button {
+                    isScanning = true
+                } label: {
+                    Image(systemName: "barcode.viewfinder")
+                        .foregroundStyle(.white.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Barcode scannen")
             }
         }
         .padding(.horizontal, Theme.Spacing.m)
@@ -90,16 +116,24 @@ struct HomeView: View {
             columns: [GridItem(.adaptive(minimum: 150), spacing: Theme.Spacing.m)],
             spacing: Theme.Spacing.m
         ) {
-            ActionTile(symbol: "magnifyingglass", title: "Suchen") {}
+            ActionTile(symbol: "magnifyingglass", title: "Suchen") {
+                selection = .search
+            }
 
             // Auf dem Mac gibt es keinen Barcode-Scanner. Die Kachel wird
             // deshalb gar nicht erst gezeigt statt tot dazustehen.
             if Platform.supportsBarcodeScanner {
-                ActionTile(symbol: "barcode.viewfinder", title: "Scannen") {}
+                ActionTile(symbol: "barcode.viewfinder", title: "Scannen") {
+                    isScanning = true
+                }
             }
 
-            ActionTile(symbol: "checklist", title: "Einkaufsliste") {}
-            ActionTile(symbol: "mappin.and.ellipse", title: "Filialen") {}
+            ActionTile(symbol: "checklist", title: "Einkaufsliste") {
+                selection = .shoppingList
+            }
+            ActionTile(symbol: "star", title: "Favoriten") {
+                selection = .favorites
+            }
         }
     }
 
@@ -107,19 +141,44 @@ struct HomeView: View {
 
     private var favoritesSection: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            SectionHeader(title: "Deine Favoriten")
-
-            GlassCard {
-                EmptyState(
-                    symbol: "star",
-                    title: "Noch keine Favoriten",
-                    message: "Markiere Produkte als Favorit. Sie erscheinen dann hier "
-                           + "mit ihrem aktuell günstigsten Preis.",
-                    actionTitle: "Produkt suchen"
-                ) {}
-                .frame(maxWidth: .infinity)
+            if favorites.isEmpty {
+                SectionHeader(title: "Deine Favoriten")
+                GlassCard {
+                    EmptyState(
+                        symbol: "star",
+                        title: "Noch keine Favoriten",
+                        message: "Markiere Produkte als Favorit. Sie erscheinen dann hier "
+                               + "mit ihrem aktuell günstigsten Preis.",
+                        actionTitle: "Produkt suchen"
+                    ) {
+                        selection = .search
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            } else {
+                SectionHeader(title: "Deine Favoriten", actionTitle: "Alle") {
+                    selection = .favorites
+                }
+                ForEach(shownFavorites) { favorite in
+                    NavigationLink(value: favorite.product) {
+                        FavoriteRow(product: favorite.product,
+                                    state: favoritesModel.state(for: favorite.product))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
+        .task(id: favorites.count) {
+            guard !shownFavorites.isEmpty else { return }
+            await favoritesModel.refresh(products: shownFavorites.map(\.product),
+                                         using: appEnvironment)
+        }
+    }
+
+    /// Auf der Startseite nur die zuletzt hinzugefügten. Jeder Eintrag kostet
+    /// eine Anfrage – die vollständige Liste steht im eigenen Bereich.
+    private var shownFavorites: [FavoriteProduct] {
+        Array(favorites.prefix(4))
     }
 
     // MARK: - Deals
