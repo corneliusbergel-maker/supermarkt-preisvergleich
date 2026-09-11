@@ -3,6 +3,9 @@ import SwiftUI
 
 #if !targetEnvironment(macCatalyst)
 import VisionKit
+// Die Symbologien (.ean13, .ean8, ...) sind `VNBarcodeSymbology` und kommen
+// aus Vision, nicht aus VisionKit.
+import Vision
 #endif
 
 /// Kapselt, was auf der jeweiligen Plattform überhaupt möglich ist.
