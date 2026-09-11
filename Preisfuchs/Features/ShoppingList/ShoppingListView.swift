@@ -12,8 +12,16 @@ struct ShoppingListView: View {
     private var entries: [ShoppingListEntry]
 
     @State private var model = ShoppingListViewModel()
+    @State private var shoppingMode: PlanBox?
 
     private var isWide: Bool { sizeClass != .compact }
+
+    /// `BasketPlan` ist nicht `Identifiable` -- fuer `.sheet(item:)` braucht es
+    /// eine Huelle mit eigener Kennung.
+    struct PlanBox: Identifiable {
+        let id = UUID()
+        let plan: BasketPlan
+    }
 
     var body: some View {
         ScrollView {
@@ -34,6 +42,9 @@ struct ShoppingListView: View {
         .navigationTitle("Einkaufsliste")
         .navigationDestination(for: Product.self) { product in
             ProductDetailView(product: product)
+        }
+        .sheet(item: $shoppingMode) { box in
+            ShoppingModeView(plan: box.plan)
         }
     }
 
@@ -121,7 +132,9 @@ struct ShoppingListView: View {
         }
 
         ForEach(Array(plans.enumerated()), id: \.offset) { _, plan in
-            PlanCard(plan: plan, assumedCost: model.assumedCostPerKilometer)
+            PlanCard(plan: plan, assumedCost: model.assumedCostPerKilometer) {
+                shoppingMode = PlanBox(plan: plan)
+            }
         }
 
         if !model.itemsWithoutPrice.isEmpty {
@@ -273,6 +286,9 @@ struct PlanCard: View {
     let plan: BasketPlan
     let assumedCost: Money?
 
+    /// Startet den Einkaufsmodus mit genau diesem Plan.
+    let onStartShopping: () -> Void
+
     var body: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
@@ -330,6 +346,16 @@ struct PlanCard: View {
                         .font(.caption)
                         .foregroundStyle(Theme.deal)
                 }
+
+                Button(action: onStartShopping) {
+                    Label("Einkauf starten", systemImage: "cart.fill")
+                        .font(.cardTitle)
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Theme.Spacing.m)
+                        .background(Theme.accentFill, in: Capsule())
+                }
+                .buttonStyle(.plain)
             }
         }
     }
