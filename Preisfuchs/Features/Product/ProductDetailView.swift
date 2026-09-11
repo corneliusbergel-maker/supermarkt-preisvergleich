@@ -123,11 +123,12 @@ struct ProductDetailView: View {
     // MARK: - Aktionen
 
     private var actionRow: some View {
-        // Raster statt fester Zeile: Auf schmalen Geräten und bei großer
-        // Schrift brechen die Knöpfe um, statt zu zerquetschen.
+        // Drei gleich breite Spalten, Symbol über Text. Das frühere Raster
+        // mit Mindestbreite ließ auf dem iPhone „Preisalarm" allein in einer
+        // zweiten Reihe stehen.
         LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 150), spacing: Theme.Spacing.m)],
-            spacing: Theme.Spacing.m
+            columns: Array(repeating: GridItem(.flexible(), spacing: Theme.Spacing.s), count: 3),
+            spacing: Theme.Spacing.s
         ) {
             actionButton(
                 title: isFavorite ? "Favorit" : "Favorisieren",
@@ -162,20 +163,28 @@ struct ProductDetailView: View {
                               isActive: Bool,
                               action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: symbol)
-                .font(.cardTitle)
-                .foregroundStyle(isActive ? Theme.ink : Theme.textPrimary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Theme.Spacing.m)
-                .background {
-                    if isActive {
-                        Capsule().fill(Theme.accentFill)
-                    } else {
-                        Capsule()
-                            .fill(Theme.surface)
-                            .overlay(Capsule().strokeBorder(Theme.surfaceStroke, lineWidth: 1))
-                    }
+            VStack(spacing: 6) {
+                Image(systemName: symbol)
+                    .font(.system(size: 18, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .foregroundStyle(isActive ? Theme.ink : Theme.textPrimary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Theme.Spacing.m)
+            .padding(.horizontal, Theme.Spacing.xs)
+            .background {
+                let shape = RoundedRectangle(cornerRadius: Theme.Radius.tile, style: .continuous)
+                if isActive {
+                    shape.fill(Theme.accentFill)
+                } else {
+                    shape
+                        .fill(Theme.surface)
+                        .overlay(shape.strokeBorder(Theme.surfaceStroke, lineWidth: 1))
                 }
+            }
         }
         .buttonStyle(.plain)
     }
@@ -431,7 +440,10 @@ struct ProductDetailView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Text("Beruht auf \(history.points.count) belegten Beobachtungen. "
+                // Der Verlauf mischt Märkte aus ganz Deutschland. Ohne diesen
+                // Satz läse er sich wie der Verlauf im Markt um die Ecke.
+                Text("Beruht auf \(history.points.count) belegten Beobachtungen "
+                     + "aus Märkten in ganz Deutschland. "
                      + "Für einen aussagekräftigen Verlauf braucht es mindestens "
                      + "\(ProductDetailViewModel.History.minimumPoints).")
                     .font(.caption)

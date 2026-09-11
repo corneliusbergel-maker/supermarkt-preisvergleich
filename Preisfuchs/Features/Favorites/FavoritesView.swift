@@ -13,6 +13,9 @@ struct FavoritesView: View {
 
     @State private var model = FavoritesViewModel()
 
+    /// Führt aus dem leeren Zustand in die Suche.
+    var onSearch: () -> Void = {}
+
     private var isWide: Bool { sizeClass != .compact }
 
     var body: some View {
@@ -95,8 +98,12 @@ struct FavoritesView: View {
                 symbol: "star",
                 title: "Noch keine Favoriten",
                 message: "Markierte Produkte erscheinen hier mit ihrem günstigsten Preis, "
-                       + "der Entfernung zum Markt und dem Stand der Daten."
-            )
+                       + "der Entfernung zum Markt und dem Stand der Daten.",
+                // Ohne Knopf war der leere Tab eine Sackgasse.
+                actionTitle: "Produkt suchen"
+            ) {
+                onSearch()
+            }
             .frame(maxWidth: .infinity)
         }
     }

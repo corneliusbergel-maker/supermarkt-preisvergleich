@@ -172,8 +172,8 @@ struct RootView: View {
         // springen und brauchen dafuer den Navigationspfad.
         case .home: HomeView(path: $path, selection: $selection, searchHandoff: $searchHandoff)
         case .search: SearchView(path: $path, searchHandoff: $searchHandoff)
-        case .shoppingList: ShoppingListView()
-        case .favorites: FavoritesView()
+        case .shoppingList: ShoppingListView(onSearch: { selection = .search })
+        case .favorites: FavoritesView(onSearch: { selection = .search })
         case .settings: SettingsView()
         }
     }

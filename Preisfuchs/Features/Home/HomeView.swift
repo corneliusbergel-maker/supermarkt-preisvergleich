@@ -153,9 +153,9 @@ struct HomeView: View {
             ActionTile(symbol: "checklist", title: "Einkaufsliste") {
                 selection = .shoppingList
             }
-            ActionTile(symbol: "star", title: "Favoriten") {
-                selection = .favorites
-            }
+            // Keine eigene Favoriten-Kachel: Die Tab-Leiste führt schon dorthin,
+            // und die Favoriten stehen direkt darunter. Mit ihr waren es fünf
+            // Kacheln im Zweierraster – die letzte stand verwaist allein.
             ActionTile(symbol: "mappin.and.ellipse", title: "Filialen") {
                 path.append(AppRoute.stores)
             }

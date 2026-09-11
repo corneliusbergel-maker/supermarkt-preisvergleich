@@ -148,9 +148,9 @@ public enum PriceConfidence: Int, Hashable, Sendable, Comparable, CaseIterable {
     public var label: String {
         switch self {
         case .none: return "Keine Preisdaten"
-        case .low: return "Moeglicherweise veraltet"
+        case .low: return "Möglicherweise veraltet"
         case .medium: return "Aktuell"
-        case .high: return "Bestaetigt"
+        case .high: return "Bestätigt"
         }
     }
 }
@@ -243,7 +243,7 @@ public struct PriceObservation: Hashable, Sendable, Identifiable {
     public func freshnessDescription(asOf now: Date = Date()) -> String {
         let age = ageInDays(asOf: now)
         switch age {
-        case ..<0: return "Datum ungueltig"
+        case ..<0: return "Datum ungültig"
         case 0: return "heute"
         case 1: return "gestern"
         case 2...30: return "vor \(age) Tagen"

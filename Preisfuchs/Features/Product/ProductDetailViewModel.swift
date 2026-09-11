@@ -143,7 +143,9 @@ final class ProductDetailViewModel {
                 costPerKilometer: Money(amount: settings.costPerKilometer)
             )
 
-            await loadHistory(barcode: barcode, using: environment)
+            await loadHistory(barcode: barcode,
+                              shownPrice: comparison.offers.first?.observation,
+                              using: environment)
 
         } catch let error as DataSourceError {
             guard !Task.isCancelled, error != .cancelled else { return }
@@ -157,7 +159,12 @@ final class ProductDetailViewModel {
 
     // MARK: - Verlauf
 
-    private func loadHistory(barcode: String, using environment: AppEnvironment) async {
+    /// - Parameter shownPrice: der Preis in der Bestpreis-Karte. Die
+    ///   Preisänderung darunter muss sich auf genau diesen Preis beziehen,
+    ///   nicht auf den neuesten irgendwo in Deutschland.
+    private func loadHistory(barcode: String,
+                             shownPrice: PriceObservation?,
+                             using environment: AppEnvironment) async {
         let since = Calendar(identifier: .gregorian)
             .date(byAdding: .day, value: -historyWindowDays, to: Date()) ?? Date()
 
@@ -168,7 +175,7 @@ final class ProductDetailViewModel {
         ) else { return }
 
         history = makeHistory(from: observations)
-        priceChange = PriceChange.fromObservations(observations)
+        priceChange = shownPrice.flatMap { PriceChange.forPrice($0, history: observations) }
     }
 
     func makeHistory(from observations: [PriceObservation]) -> History? {

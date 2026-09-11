@@ -4,6 +4,7 @@ import PriceCore
 struct SettingsView: View {
 
     @Environment(AppEnvironment.self) private var appEnvironment
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var isChoosingPlace = false
 
     var body: some View {
@@ -19,6 +20,10 @@ struct SettingsView: View {
             aboutSection
         }
         .scrollContentBackground(.hidden)
+        // Platz für die schwebende Tab-Leiste. Ohne ihn blieben die untersten
+        // Einträge dauerhaft darunter verdeckt – eine Liste scrollt nur bis
+        // zum Rand, nicht darüber hinaus.
+        .contentMargins(.bottom, sizeClass == .compact ? 120 : 0, for: .scrollContent)
         .background(Theme.ink)
         .navigationTitle("Einstellungen")
         .sheet(isPresented: $isChoosingPlace) {

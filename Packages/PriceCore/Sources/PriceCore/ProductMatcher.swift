@@ -108,7 +108,7 @@ public enum ProductMatcher {
 
         // Menge entscheidet ueber identisch vs. nur vergleichbar.
         guard let quantityA = lhs.quantity, let quantityB = rhs.quantity else {
-            return .different(reason: "Menge unbekannt - kein sicherer Vergleich moeglich")
+            return .different(reason: "Menge unbekannt – kein sicherer Vergleich möglich")
         }
 
         guard quantityA.isComparable(with: quantityB) else {
@@ -119,7 +119,7 @@ public enum ProductMatcher {
         guard quantityA.hasSameTotal(as: quantityB) else {
             return .comparable(reason: "Gleiches Produkt, andere Gesamtmenge "
                                + "(\(quantityA.formatted()) vs. \(quantityB.formatted())) "
-                               + "- nur ueber den Grundpreis vergleichbar")
+                               + "– nur über den Grundpreis vergleichbar")
         }
 
         // Gleiche Gesamtmenge, aber andere Aufteilung: 4 x 250 g ist ein
@@ -130,11 +130,11 @@ public enum ProductMatcher {
         }
 
         if barcodesDiffer {
-            return .comparable(reason: "Merkmale stimmen ueberein, "
+            return .comparable(reason: "Merkmale stimmen überein, "
                                + "aber unterschiedliche Barcodes")
         }
 
-        return .identical(reason: "Marke, Variante und Menge stimmen ueberein")
+        return .identical(reason: "Marke, Variante und Menge stimmen überein")
     }
 
     /// EAN-13 und die 12-stellige UPC-Variante bezeichnen dieselbe Ware;

@@ -113,23 +113,44 @@ public extension PriceChange {
     /// Bildet die Veränderung aus einer Reihe von Beobachtungen.
     ///
     /// Verglichen wird der neueste Preis mit der jüngsten **davorliegenden
-    /// Beobachtung, die einen anderen Betrag hat**. Zwei identische Messungen
-    /// hintereinander sind keine Veränderung -- sie zu melden wäre irreführend.
+    /// Beobachtung derselben Filiale, die einen anderen Betrag hat** -- nach
+    /// denselben Regeln wie `forPrice(_:history:)`.
     ///
     /// Gibt `nil` zurück, wenn es keine verwertbare Vorgeschichte gibt.
     static func fromObservations(_ observations: [PriceObservation]) -> PriceChange? {
-        let sorted = observations.sorted { $0.observedOn > $1.observedOn }
-        guard let latest = sorted.first else { return nil }
-
-        let earlier = sorted.dropFirst().first {
-            $0.price.currency == latest.price.currency
-            && $0.price.amount != latest.price.amount
+        guard let latest = observations.max(by: { $0.observedOn < $1.observedOn }) else {
+            return nil
         }
+        return forPrice(latest, history: observations)
+    }
+
+    /// Veränderung eines bestimmten Preises gegenüber seiner Vorgeschichte.
+    ///
+    /// Zählt nur, was **in derselben Filiale** vorher beobachtet wurde.
+    /// 1,39 € bei Lidl gegen 1,69 € bei Rewe ist ein Unterschied zwischen zwei
+    /// Märkten, keine Preisänderung -- so gemeldet wäre die Aussage erfunden.
+    /// Ohne bekannte Filiale gibt es deshalb keine Aussage.
+    ///
+    /// Zwei identische Messungen hintereinander sind ebenfalls keine
+    /// Veränderung; gesucht wird die jüngste mit einem **anderen** Betrag.
+    static func forPrice(_ current: PriceObservation,
+                         history: [PriceObservation]) -> PriceChange? {
+        guard let storeID = current.store?.id else { return nil }
+
+        let earlier = history
+            .filter {
+                $0.id != current.id
+                && $0.store?.id == storeID
+                && $0.observedOn <= current.observedOn
+                && $0.price.currency == current.price.currency
+                && $0.price.amount != current.price.amount
+            }
+            .max { $0.observedOn < $1.observedOn }
         guard let earlier else { return nil }
 
         return PriceChange(previous: earlier.price,
                            previousDate: earlier.observedOn,
-                           current: latest.price,
-                           currentDate: latest.observedOn)
+                           current: current.price,
+                           currentDate: current.observedOn)
     }
 }

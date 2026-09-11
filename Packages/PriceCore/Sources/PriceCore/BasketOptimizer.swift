@@ -99,9 +99,9 @@ public struct BasketPlan: Hashable, Sendable {
 
         public var label: String {
             switch self {
-            case .cheapestOverall: return "Guenstigste Variante"
+            case .cheapestOverall: return "Günstigste Variante"
             case .singleStore: return "Alles in einem Markt"
-            case .atMostStores(let n): return "Hoechstens \(n) Maerkte"
+            case .atMostStores(let n): return "Höchstens \(n) Märkte"
             case .bestValue: return "Beste Kombination aus Preis und Weg"
             }
         }

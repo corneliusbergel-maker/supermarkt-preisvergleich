@@ -11,11 +11,23 @@ private func euro(_ value: String) -> Money {
     Money(amount: Decimal(string: value)!)
 }
 
-private func observation(_ price: String, daysAgo: Int, currency: String = "EUR") -> PriceObservation {
-    PriceObservation(id: "\(price)-\(daysAgo)",
+private let homeStore = Store(id: "node/1",
+                              retailer: Retailer(id: "lidl", name: "Lidl"),
+                              coordinate: Coordinate(latitude: 52.52, longitude: 13.40))
+
+private let otherStore = Store(id: "node/2",
+                               retailer: Retailer(id: "rewe", name: "Rewe"),
+                               coordinate: Coordinate(latitude: 52.51, longitude: 13.39))
+
+private func observation(_ price: String,
+                         daysAgo: Int,
+                         currency: String = "EUR",
+                         store: Store? = homeStore) -> PriceObservation {
+    PriceObservation(id: "\(price)-\(daysAgo)-\(store?.id ?? "ohne")",
                      productID: "ean:1",
                      price: Money(amount: Decimal(string: price)!, currency: currency),
                      observedOn: day(daysAgo),
+                     store: store,
                      source: "Test")
 }
 
@@ -172,5 +184,58 @@ final class PriceChangeFromObservationsTests: XCTestCase {
         let change = try XCTUnwrap(PriceChange.fromObservations(series))
         XCTAssertEqual(change.previous.amount, Decimal(string: "1.69"),
                        "Der Franken-Preis darf nicht als Vergleich dienen")
+    }
+
+    /// Ein Preis in einer anderen Filiale ist ein Unterschied zwischen zwei
+    /// Märkten, keine Preisänderung.
+    func testOtherStoresAreSkipped() throws {
+        let series = [
+            observation("1.69", daysAgo: 30),
+            observation("1.99", daysAgo: 10, store: otherStore),
+            observation("1.39", daysAgo: 0)
+        ]
+        let change = try XCTUnwrap(PriceChange.fromObservations(series))
+        XCTAssertEqual(change.previous.amount, Decimal(string: "1.69"))
+        XCTAssertEqual(change.dayCount, 30)
+    }
+
+    func testOnlyOtherStoresYieldNoChange() {
+        let series = [
+            observation("1.99", daysAgo: 10, store: otherStore),
+            observation("1.39", daysAgo: 0)
+        ]
+        XCTAssertNil(PriceChange.fromObservations(series))
+    }
+
+    /// Ohne Filiale ist nicht feststellbar, ob zwei Preise vom selben Ort
+    /// stammen.
+    func testUnknownStoreYieldsNoChange() {
+        let series = [
+            observation("1.69", daysAgo: 10, store: nil),
+            observation("1.39", daysAgo: 0, store: nil)
+        ]
+        XCTAssertNil(PriceChange.fromObservations(series))
+    }
+
+    /// Die Änderung gehört zum angezeigten Preis -- nicht zum neuesten Preis
+    /// irgendwo in Deutschland.
+    func testChangeBelongsToTheShownPrice() throws {
+        let shown = observation("1.39", daysAgo: 3)
+        let history = [
+            observation("1.69", daysAgo: 20),
+            shown,
+            observation("2.49", daysAgo: 0, store: otherStore)
+        ]
+        let change = try XCTUnwrap(PriceChange.forPrice(shown, history: history))
+        XCTAssertEqual(change.current.amount, Decimal(string: "1.39"))
+        XCTAssertEqual(change.previous.amount, Decimal(string: "1.69"))
+        XCTAssertEqual(change.dayCount, 17)
+    }
+
+    /// Was später beobachtet wurde, ist keine Vorgeschichte.
+    func testLaterObservationsAreNotHistory() {
+        let shown = observation("1.39", daysAgo: 10)
+        let history = [shown, observation("1.69", daysAgo: 0)]
+        XCTAssertNil(PriceChange.forPrice(shown, history: history))
     }
 }

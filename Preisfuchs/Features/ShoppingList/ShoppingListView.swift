@@ -14,6 +14,9 @@ struct ShoppingListView: View {
     @State private var model = ShoppingListViewModel()
     @State private var shoppingMode: PlanBox?
 
+    /// Führt aus dem leeren Zustand in die Suche.
+    var onSearch: () -> Void = {}
+
     private var isWide: Bool { sizeClass != .compact }
 
     /// `BasketPlan` ist nicht `Identifiable` -- fuer `.sheet(item:)` braucht es
@@ -184,8 +187,12 @@ struct ShoppingListView: View {
                 title: "Deine Einkaufsliste ist leer",
                 message: "Füge Produkte über die Suche hinzu. Preisfuchs rechnet dann aus, "
                        + "in welchem Markt – oder in welcher Kombination aus wenigen Märkten – "
-                       + "der ganze Einkauf am günstigsten wird."
-            )
+                       + "der ganze Einkauf am günstigsten wird.",
+                // Ohne Knopf war der leere Tab eine Sackgasse.
+                actionTitle: "Produkt suchen"
+            ) {
+                onSearch()
+            }
             .frame(maxWidth: .infinity)
         }
     }

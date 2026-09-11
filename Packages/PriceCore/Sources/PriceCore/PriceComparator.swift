@@ -68,12 +68,12 @@ public enum PriceSortCriterion: String, Hashable, Sendable, CaseIterable {
 
     public var label: String {
         switch self {
-        case .price: return "Guenstigster Preis"
-        case .unitPrice: return "Guenstigster Grundpreis"
+        case .price: return "Günstigster Preis"
+        case .unitPrice: return "Günstigster Grundpreis"
         case .distance: return "Entfernung"
         case .bestValue: return "Beste Kombination"
         case .discount: return "Angebote zuerst"
-        case .freshness: return "Aktualitaet"
+        case .freshness: return "Aktualität"
         }
     }
 }
@@ -294,12 +294,12 @@ public extension PriceComparator {
         let costText = travelCost.roundedToCents.formatted(locale: locale)
 
         let explanation = worthIt
-            ? "Du sparst \(savingsText) und faehrst dafuer \(distanceText) weiter. "
+            ? "Du sparst \(savingsText) und fährst dafür \(distanceText) weiter. "
               + "Bei angenommenen \(rate.formatted(locale: locale))/km kostet der "
-              + "Umweg hin und zurueck etwa \(costText) - er lohnt sich also."
-            : "Du sparst nur \(savingsText), faehrst aber \(distanceText) weiter. "
+              + "Umweg hin und zurück etwa \(costText) – er lohnt sich also."
+            : "Du sparst nur \(savingsText), fährst aber \(distanceText) weiter. "
               + "Bei angenommenen \(rate.formatted(locale: locale))/km kostet der "
-              + "Umweg hin und zurueck etwa \(costText) - er lohnt sich eher nicht."
+              + "Umweg hin und zurück etwa \(costText) – er lohnt sich eher nicht."
 
         return DetourAdvice(cheaperFarther: cheapest,
                             pricierCloser: nearest,

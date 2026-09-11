@@ -16,6 +16,10 @@ struct StoresView: View {
 
     private let radiusOptions: [Double] = [1, 2, 5, 10]
 
+    /// Mehr Marker machen die Karte in Innenstädten zu einem Klumpen: In
+    /// Berlin-Mitte liegen im 5-km-Umkreis über 200 Filialen.
+    private static let mapMarkerLimit = 25
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
@@ -86,6 +90,13 @@ struct StoresView: View {
         case .stores(let entries):
             radiusPicker
             mapCard(entries)
+            if entries.count > Self.mapMarkerLimit {
+                Text("Die Karte zeigt die \(Self.mapMarkerLimit) nächsten von "
+                     + "\(entries.count) Filialen. Alle stehen in der Liste.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             list(entries)
             attribution
         }
@@ -125,7 +136,8 @@ struct StoresView: View {
 
     private func mapCard(_ entries: [StoresViewModel.Entry]) -> some View {
         Map(position: $camera) {
-            ForEach(entries) { entry in
+            // Die Liste ist nach Entfernung sortiert; die Karte zeigt die nächsten.
+            ForEach(Array(entries.prefix(Self.mapMarkerLimit))) { entry in
                 Marker(entry.store.displayName,
                        systemImage: "cart.fill",
                        coordinate: CLLocationCoordinate2D(

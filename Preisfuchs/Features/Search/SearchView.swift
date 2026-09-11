@@ -63,9 +63,20 @@ struct SearchView: View {
     @ViewBuilder
     private var scannerRow: some View {
         if Platform.supportsBarcodeScanner {
-            ActionTile(symbol: "barcode.viewfinder", title: "Barcode scannen") {
+            // Schmale Zeile statt großer Kachel: Die Kachel drückte die
+            // Treffer ein gutes Stück nach unten.
+            Button {
                 isScanning = true
+            } label: {
+                Label("Barcode scannen", systemImage: "barcode.viewfinder")
+                    .font(.cardTitle)
+                    .foregroundStyle(Theme.textPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Theme.Spacing.m)
+                    .background(Theme.surface, in: Capsule())
+                    .overlay(Capsule().strokeBorder(Theme.surfaceStroke, lineWidth: 1))
             }
+            .buttonStyle(.plain)
         } else {
             GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
                 Label("Barcode-Scannen ist nur auf iPhone und iPad verfügbar.",
