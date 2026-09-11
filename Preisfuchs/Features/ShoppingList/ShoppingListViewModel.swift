@@ -90,8 +90,13 @@ final class ShoppingListViewModel {
                     .filter { offer in
                         // Entfernungsfilter hier schon anwenden, damit der
                         // Optimierer keine Märkte einplant, die der Nutzer
-                        // ausgeschlossen hat.
-                        guard let limit = settings.maxDistanceMeters else { return true }
+                        // ausgeschlossen hat. Ohne Bezugspunkt entfällt der
+                        // Filter – sonst bliebe ohne Standortfreigabe nichts
+                        // übrig.
+                        guard let limit = PriceComparator.effectiveDistanceLimit(
+                            settings.maxDistanceMeters,
+                            hasReferencePoint: coordinate != nil
+                        ) else { return true }
                         guard let distance = offer.distanceMeters else { return false }
                         return distance <= limit
                     }

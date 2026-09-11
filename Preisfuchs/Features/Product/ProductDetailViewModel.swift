@@ -124,7 +124,10 @@ final class ProductDetailViewModel {
                 allowedRetailerIDs: settings.enabledRetailerIDs.isEmpty
                     ? nil
                     : allowedIdentifiers(in: offers, settings: settings),
-                maxDistanceMeters: settings.maxDistanceMeters,
+                maxDistanceMeters: PriceComparator.effectiveDistanceLimit(
+                    settings.maxDistanceMeters,
+                    hasReferencePoint: coordinate != nil
+                ),
                 sortedBy: settings.sortCriterion,
                 costPerKilometer: Money(amount: settings.costPerKilometer)
             )

@@ -140,6 +140,27 @@ final class PriceComparatorTests: XCTestCase {
         XCTAssertEqual(total, 5, "Die UI soll sagen koennen, wie viel der Filter verbirgt")
     }
 
+    /// Ohne Standort hat kein Angebot eine Entfernung. Wuerde der Radius
+    /// trotzdem angewendet, verschwaende jeder einzelne Preis -- genau das ist
+    /// im Simulator ohne Standortfreigabe passiert.
+    func testWithoutAReferencePointThereIsNoDistanceLimit() {
+        XCTAssertNil(PriceComparator.effectiveDistanceLimit(5_000, hasReferencePoint: false))
+        XCTAssertEqual(PriceComparator.effectiveDistanceLimit(5_000, hasReferencePoint: true), 5_000)
+        XCTAssertNil(PriceComparator.effectiveDistanceLimit(nil, hasReferencePoint: true))
+    }
+
+    func testOffersSurviveWithoutLocationWhenTheLimitIsDropped() {
+        let offers = [
+            offer("REWE", price: "1.49", distanceMeters: nil),
+            offer("EDEKA", price: "1.19", distanceMeters: nil)
+        ]
+        let limit = PriceComparator.effectiveDistanceLimit(5_000, hasReferencePoint: false)
+        let result = PriceComparator.compare(offers, maxDistanceMeters: limit, now: referenceNow)
+
+        XCTAssertEqual(result.offers.count, 2)
+        XCTAssertEqual(result.offers.first?.observation.retailer?.name, "EDEKA")
+    }
+
     func testUnknownDistanceIsExcludedWhenARadiusIsSet() {
         // Unbekannte Entfernung als "im Radius" zu werten waere geraten.
         let offers = [

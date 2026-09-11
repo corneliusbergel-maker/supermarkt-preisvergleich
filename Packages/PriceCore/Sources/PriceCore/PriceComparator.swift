@@ -122,6 +122,17 @@ public enum PriceComparator {
                             now: now))
     }
 
+    /// Die Entfernungsgrenze, die tatsaechlich angewendet werden darf.
+    ///
+    /// Ohne Bezugspunkt hat kein Angebot eine Entfernung. Eine Grenze darauf
+    /// anzuwenden wuerde **alles** ausfiltern -- wer den Standort nicht
+    /// freigibt, saehe dann keinen einzigen Preis, ohne zu verstehen warum.
+    /// Ohne Bezugspunkt gibt es deshalb auch keine Entfernungsgrenze.
+    public static func effectiveDistanceLimit(_ limit: Double?,
+                                              hasReferencePoint: Bool) -> Double? {
+        hasReferencePoint ? limit : nil
+    }
+
     public static func sort(_ offers: [PriceOffer],
                             by criterion: PriceSortCriterion,
                             costPerKilometer: Money? = nil,

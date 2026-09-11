@@ -76,7 +76,10 @@ final class FavoritesViewModel {
 
                 let comparison = PriceComparator.compare(
                     offers,
-                    maxDistanceMeters: settings.maxDistanceMeters,
+                    maxDistanceMeters: PriceComparator.effectiveDistanceLimit(
+                        settings.maxDistanceMeters,
+                        hasReferencePoint: coordinate != nil
+                    ),
                     sortedBy: .price
                 )
 
