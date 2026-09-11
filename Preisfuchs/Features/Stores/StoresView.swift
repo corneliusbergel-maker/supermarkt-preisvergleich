@@ -28,7 +28,9 @@ struct StoresView: View {
         }
         .background(Theme.ink)
         .navigationTitle("Filialen")
-        .task { await model.load(using: appEnvironment) }
+        // Neu laden, sobald der Bezugspunkt wechselt – etwa direkt nach der
+        // Standortfreigabe oder wenn ein Ort von Hand gewählt wurde.
+        .task(id: appEnvironment.activeCoordinate) { await model.load(using: appEnvironment) }
         .sheet(item: $routeTarget) { store in
             RouteSheet(store: store)
         }
@@ -51,20 +53,10 @@ struct StoresView: View {
             }
 
         case .needsLocation:
-            GlassCard {
-                EmptyState(
-                    symbol: "location.slash",
-                    title: "Kein Bezugspunkt",
-                    message: "Ohne Standort lässt sich nicht sagen, welche Märkte in deiner "
-                           + "Nähe liegen. Gib den Standort frei oder wähle einen Ort von "
-                           + "Hand – beides funktioniert.",
-                    actionTitle: appEnvironment.location.authorization == .notDetermined
-                        ? "Standort freigeben" : nil
-                ) {
-                    appEnvironment.location.requestPermission()
-                }
-                .frame(maxWidth: .infinity)
-            }
+            // Dieselbe Karte wie auf der Startseite: Standort freigeben oder
+            // Ort von Hand wählen. Vorher gab es hier nur den ersten Weg, und
+            // wer die Ortung abgelehnt hatte, stand vor einer Sackgasse.
+            LocationPromptCard()
 
         case .failed(let message, let isRetryable):
             GlassCard {

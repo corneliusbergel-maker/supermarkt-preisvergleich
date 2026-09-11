@@ -35,7 +35,8 @@ struct FavoritesView: View {
             ProductDetailView(product: product)
         }
         .refreshable { await refresh() }
-        .task { await refresh() }
+        // Neu laden, sobald der Bezugspunkt wechselt.
+        .task(id: appEnvironment.activeCoordinate) { await refresh() }
         .toolbar {
             if !favorites.isEmpty {
                 ToolbarItem(placement: .primaryAction) {

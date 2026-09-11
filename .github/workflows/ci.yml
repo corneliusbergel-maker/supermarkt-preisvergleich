@@ -236,33 +236,41 @@ jobs:
 
           mkdir -p screenshots
 
-          # 1) Startseite.
-          # Ein frisch gebooteter Simulator wirft Systembanner ein
-          # ("Ready for Apple Intelligence"). Die verschwinden nach wenigen
-          # Sekunden von selbst - vorher aufgenommene Bilder waeren unbrauchbar.
-          xcrun simctl launch "$UDID" de.preisfuchs.app
-          sleep 22
-          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-1-Start.png"
+          # Nimmt ein Bild auf: App neu starten, warten, fotografieren.
+          # $1 = Dateiname, $2 = Wartezeit in Sekunden, Rest = Startparameter.
+          shot() {
+            local name="$1" wait="$2"
+            shift 2
+            xcrun simctl terminate "$UDID" de.preisfuchs.app 2>/dev/null || true
+            sleep 2
+            xcrun simctl launch "$UDID" de.preisfuchs.app "$@"
+            sleep "$wait"
+            xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-$name.png"
+          }
 
-          # 2) Suche mit ECHTEN Daten. Der Startparameter traegt nur den
-          # Suchbegriff ein - die Abfrage geht danach an die richtige
-          # Open-Food-Facts-API. Was im Bild steht, kommt von dort.
-          xcrun simctl terminate "$UDID" de.preisfuchs.app || true
-          sleep 2
-          xcrun simctl launch "$UDID" de.preisfuchs.app -uiTab search -uiQuery nutella
-          sleep 15
-          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-2-Suche.png"
+          # 1) Startseite OHNE Standort - so sieht die App direkt nach der
+          # Installation aus. Beim ersten Bild laenger warten: Ein frisch
+          # gebooteter Simulator wirft Systembanner ein ("Ready for Apple
+          # Intelligence"), die erst nach einigen Sekunden verschwinden.
+          shot 01-Start-ohne-Standort 22
 
-          # 3) Produktdetail mit ECHTEM Preisvergleich.
-          # Nutella 400 g, EAN 3017620422003 - dazu liegen in Open Prices 165
-          # belegte Preise an 110 Standorten vor, also genug fuer Vergleich
-          # und Verlauf.
-          xcrun simctl terminate "$UDID" de.preisfuchs.app || true
-          sleep 2
-          xcrun simctl launch "$UDID" de.preisfuchs.app \
-            -uiTab search -uiBarcode 3017620422003
-          sleep 18
-          xcrun simctl io "$UDID" screenshot "screenshots/${{ matrix.device }}-3-Produkt.png"
+          # Ab hier MIT Standort: Freigabe erteilen und Berlin-Mitte setzen.
+          # Alle folgenden Daten kommen trotzdem aus den echten APIs.
+          xcrun simctl privacy "$UDID" grant location de.preisfuchs.app || true
+          xcrun simctl location "$UDID" set 52.520008,13.404954 || true
+
+          shot 02-Start 20
+          shot 03-Suche 15 -uiTab search -uiQuery nutella
+          # Wagner Big City Cheese 415 g, EAN 4009233005802 - eines der wenigen
+          # Markenprodukte mit belegten Preisen in Berlin (2026-09-11: zwei).
+          shot 04-Produkt 20 -uiTab search -uiBarcode 4009233005802
+          # Nutella 400 g, EAN 3017620422003 - 165 Preise weltweit, keiner aus
+          # Deutschland. Zeigt den ehrlichen Leerzustand statt Auslandspreisen.
+          shot 04b-Produkt-ohne-deutsche-Preise 20 -uiTab search -uiBarcode 3017620422003
+          shot 05-Filialen 25 -uiRoute stores
+          shot 06-Favoriten 8 -uiTab favorites
+          shot 07-Liste 8 -uiTab list
+          shot 08-Einstellungen 8 -uiTab settings
 
           ls -la screenshots
 

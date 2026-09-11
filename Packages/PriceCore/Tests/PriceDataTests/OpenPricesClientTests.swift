@@ -121,7 +121,7 @@ final class OpenPricesConfidenceTests: XCTestCase {
         let json = """
         {"items":[{"id":1,\
         "location":{"osm_id":1,"osm_type":"NODE","osm_name":"REWE","osm_brand":"REWE",\
-        "osm_lat":52.52,"osm_lon":13.405},\
+        "osm_lat":52.52,"osm_lon":13.405,"osm_address_country_code":"DE"},\
         "proof":{"id":1,"type":"PRICE_TAG"},\
         "price":1.49,"price_is_discounted":false,"currency":"EUR",\
         "date":"\(day)","product_code":"4009233005802"}],"total":1}
@@ -151,7 +151,7 @@ final class OpenPricesConfidenceTests: XCTestCase {
         let json = """
         {"items":[{"id":2,\
         "location":{"osm_id":1,"osm_type":"NODE","osm_brand":"REWE",\
-        "osm_lat":52.52,"osm_lon":13.405},\
+        "osm_lat":52.52,"osm_lon":13.405,"osm_address_country_code":"DE"},\
         "price":2.00,"currency":"EUR","date":"\(day)","product_code":"123"}],"total":1}
         """
         let prices = try await OpenPricesClient(transport: StubTransport(json: json))
@@ -168,7 +168,7 @@ final class OpenPricesDiscountTests: XCTestCase {
         let json = """
         {"items":[{"id":3,\
         "location":{"osm_id":1,"osm_type":"NODE","osm_brand":"LIDL",\
-        "osm_lat":52.52,"osm_lon":13.405},\
+        "osm_lat":52.52,"osm_lon":13.405,"osm_address_country_code":"DE"},\
         "proof":{"id":1,"type":"PRICE_TAG"},\
         "price":1.29,"price_is_discounted":true,"price_without_discount":1.69,\
         "currency":"EUR","date":"2026-09-09","product_code":"123"}],"total":1}
@@ -187,7 +187,7 @@ final class OpenPricesDiscountTests: XCTestCase {
         let json = """
         {"items":[{"id":4,\
         "location":{"osm_id":1,"osm_type":"NODE","osm_brand":"LIDL",\
-        "osm_lat":52.52,"osm_lon":13.405},\
+        "osm_lat":52.52,"osm_lon":13.405,"osm_address_country_code":"DE"},\
         "price":1.29,"price_is_discounted":true,"price_without_discount":null,\
         "currency":"EUR","date":"2026-09-09","product_code":"123"}],"total":1}
         """

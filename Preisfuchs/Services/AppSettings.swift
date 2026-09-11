@@ -108,7 +108,12 @@ final class AppSettings {
             )
         }
 
-        self.maxDistanceMeters = defaults.object(forKey: Keys.maxDistance) as? Double ?? 5_000
+        // Voreinstellung 25 km, nicht 5 km. Gemessen am 2026-09-11 hatte das
+        // am besten belegte Produkt im Umkreis von 25 km um Berlin-Mitte ganze
+        // sieben Preise. Mit 5 km fiel bei fast jedem Produkt alles durchs
+        // Raster, und die App wirkte leer. Entfernungen werden weiterhin
+        // angezeigt; enger stellen lässt es sich in den Einstellungen.
+        self.maxDistanceMeters = defaults.object(forKey: Keys.maxDistance) as? Double ?? 25_000
 
         self.sortCriterion = (defaults.string(forKey: Keys.sort)
             .flatMap(PriceSortCriterion.init(rawValue:))) ?? .price

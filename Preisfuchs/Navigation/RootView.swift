@@ -56,6 +56,7 @@ struct RootView: View {
 
     @State private var selection: Destination = LaunchOptions.initialDestination ?? .home
     @State private var path = NavigationPath()
+    @State private var searchHandoff: String?
 
     var body: some View {
         Group {
@@ -78,10 +79,20 @@ struct RootView: View {
         // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
         // Produkt und Preise kommen aus den echten APIs.
         .task {
+            if LaunchOptions.initialRoute == .stores {
+                path.append(AppRoute.stores)
+            }
             guard let barcode = LaunchOptions.initialBarcode,
                   let product = try? await appEnvironment.products.product(barcode: barcode)
             else { return }
             path.append(product)
+        }
+        // Jeder Tab beginnt bei seiner Wurzel. Alle Tabs teilen sich einen
+        // Navigationspfad; ohne dieses Zurücksetzen blieb eine geöffnete
+        // Produktseite beim Tabwechsel stehen, und die Tab-Leiste wirkte,
+        // als reagiere sie nicht.
+        .onChange(of: selection) { _, _ in
+            path = NavigationPath()
         }
     }
 
@@ -159,8 +170,8 @@ struct RootView: View {
         switch destination {
         // Start und Suche koennen nach einem Scan direkt auf die Produktseite
         // springen und brauchen dafuer den Navigationspfad.
-        case .home: HomeView(path: $path, selection: $selection)
-        case .search: SearchView(path: $path)
+        case .home: HomeView(path: $path, selection: $selection, searchHandoff: $searchHandoff)
+        case .search: SearchView(path: $path, searchHandoff: $searchHandoff)
         case .shoppingList: ShoppingListView()
         case .favorites: FavoritesView()
         case .settings: SettingsView()

@@ -60,7 +60,9 @@ struct ProductDetailView: View {
         .background(Theme.ink)
         .navigationTitle(model.displayProduct.name)
         .navigationBarTitleDisplayMode(.inline)
-        .task { await model.load(using: appEnvironment) }
+        // Neu laden, sobald der Bezugspunkt wechselt - etwa wenn die
+        // Standortfreigabe erst nach dem Oeffnen der Seite eintrifft.
+        .task(id: appEnvironment.activeCoordinate) { await model.load(using: appEnvironment) }
         .sheet(item: $routeTarget) { store in
             RouteSheet(store: store)
         }
@@ -310,6 +312,17 @@ struct ProductDetailView: View {
                     }
                 }
 
+                // Ohne Bezugspunkt sucht die App in ganz Deutschland. Das muss
+                // dastehen – sonst sieht ein Preis aus Hamburg in München aus
+                // wie einer um die Ecke.
+                if !appEnvironment.hasLocation {
+                    Label("Ohne Standort: günstigster belegter Preis in ganz Deutschland",
+                          systemImage: "map")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 confidenceBadge(for: offer)
 
                 if let change = model.priceChange, change.isWorthShowing {
@@ -464,8 +477,14 @@ struct ProductDetailView: View {
         GlassCard {
             EmptyState(
                 symbol: "eurosign.circle",
-                title: "Keine Preisdaten in deiner Nähe",
-                message: "Für dieses Produkt liegt hier kein belegter Preis vor. "
+                // Ohne Bezugspunkt wird in ganz Deutschland gesucht – dann wäre
+                // „in deiner Nähe" schlicht falsch.
+                title: appEnvironment.hasLocation
+                    ? "Keine Preisdaten in deiner Nähe"
+                    : "Keine Preisdaten aus Deutschland",
+                message: (appEnvironment.hasLocation
+                    ? "Im gewählten Umkreis liegt für dieses Produkt kein belegter Preis vor. "
+                    : "Für dieses Produkt ist in Deutschland noch kein belegter Preis erfasst. ")
                        + "Die Preisdatenbank wird von Menschen gefüllt – wenn du den "
                        + "Preis im Markt siehst, kannst du ihn beitragen.",
                 // Ohne Barcode lässt sich ein Preis nicht zuordnen; dann wird

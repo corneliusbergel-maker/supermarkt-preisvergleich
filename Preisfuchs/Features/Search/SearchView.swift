@@ -5,6 +5,10 @@ struct SearchView: View {
 
     @Binding var path: NavigationPath
 
+    /// Von der Startseite übergebener Suchbegriff. Wird beim Erscheinen
+    /// übernommen und dann geleert.
+    @Binding var searchHandoff: String?
+
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var model = SearchViewModel()
     @State private var isScanning = false
@@ -38,10 +42,14 @@ struct SearchView: View {
                 path.append(product)
             }
         }
-        // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
-        // die Suche läuft danach ganz normal gegen die echte API.
+        // Übernimmt einen auf der Startseite getippten Begriff. Der
+        // CI-Startparameter (-uiQuery) dient nur Bildschirmfotos; die Suche
+        // läuft in beiden Fällen ganz normal gegen die echte API.
         .task {
-            if let query = LaunchOptions.initialSearchQuery, model.query.isEmpty {
+            if let handed = searchHandoff, !handed.isEmpty {
+                model.query = handed
+                searchHandoff = nil
+            } else if let query = LaunchOptions.initialSearchQuery, model.query.isEmpty {
                 model.query = query
             }
         }

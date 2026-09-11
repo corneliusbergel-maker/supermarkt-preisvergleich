@@ -41,6 +41,16 @@ enum LaunchOptions {
         value(for: "-uiBarcode").map { $0.filter(\.isNumber) }.flatMap { $0.isEmpty ? nil : $0 }
     }
 
+    /// Unterziel, das beim Start geoeffnet wird -- etwa die Filialansicht,
+    /// die kein eigener Tab ist.
+    static var initialRoute: AppRoute? {
+        guard let raw = value(for: "-uiRoute") else { return nil }
+        switch raw.lowercased() {
+        case "stores", "filialen": return .stores
+        default: return nil
+        }
+    }
+
     private static func value(for key: String) -> String? {
         let arguments = ProcessInfo.processInfo.arguments
         guard let index = arguments.firstIndex(of: key),
@@ -52,5 +62,6 @@ enum LaunchOptions {
     static var initialDestination: Destination? { nil }
     static var initialSearchQuery: String? { nil }
     static var initialBarcode: String? { nil }
+    static var initialRoute: AppRoute? { nil }
     #endif
 }

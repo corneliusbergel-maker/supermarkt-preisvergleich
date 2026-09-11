@@ -57,6 +57,15 @@ public struct Store: Hashable, Sendable, Identifiable {
 
     public let websiteURL: URL?
 
+    /// ISO-3166-Laendercode, sofern die Quelle ihn nennt (Open Prices tut es).
+    ///
+    /// Gebraucht, wenn es keinen Bezugspunkt gibt: Ohne Standort liefe eine
+    /// Preisabfrage weltweit, und ein Lidl in Frankreich saehe aus wie einer
+    /// um die Ecke. Open Prices ist in Frankreich rund vierzigmal dichter
+    /// befuellt als in Deutschland -- ohne diese Angabe beherrschen
+    /// franzoesische Preise den Vergleich.
+    public let countryCode: String?
+
     public init(id: String,
                 retailer: Retailer,
                 coordinate: Coordinate,
@@ -66,7 +75,8 @@ public struct Store: Hashable, Sendable, Identifiable {
                 postalCode: String? = nil,
                 city: String? = nil,
                 openingHoursRaw: String? = nil,
-                websiteURL: URL? = nil) {
+                websiteURL: URL? = nil,
+                countryCode: String? = nil) {
         self.id = id
         self.retailer = retailer
         self.coordinate = coordinate
@@ -77,6 +87,9 @@ public struct Store: Hashable, Sendable, Identifiable {
         self.city = city
         self.openingHoursRaw = openingHoursRaw
         self.websiteURL = websiteURL
+        self.countryCode = countryCode?
+            .trimmingCharacters(in: .whitespaces)
+            .uppercased()
     }
 
     public var displayName: String { name ?? retailer.name }

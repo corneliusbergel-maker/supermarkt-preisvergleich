@@ -12,6 +12,9 @@ struct HomeView: View {
     @Binding var path: NavigationPath
     @Binding var selection: Destination
 
+    /// Übergibt den auf der Startseite getippten Suchbegriff an den Such-Tab.
+    @Binding var searchHandoff: String?
+
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(AppEnvironment.self) private var appEnvironment
 
@@ -29,6 +32,11 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 heroSection
+                // Ohne Bezugspunkt bleiben Deals, Filialen und Entfernungen
+                // leer. Die Frage danach gehört deshalb ganz nach oben.
+                if !appEnvironment.hasLocation {
+                    LocationPromptCard()
+                }
                 quickActions
                 favoritesSection
                 dealsSection
@@ -93,7 +101,15 @@ struct HomeView: View {
                 .textFieldStyle(.plain)
                 .foregroundStyle(.white)
                 .submitLabel(.search)
-                .onSubmit { selection = .search }
+                .onSubmit {
+                    // Der Begriff muss mit in den Such-Tab. Vorher ging er beim
+                    // Wechsel verloren, und die Suche stand leer da.
+                    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !trimmed.isEmpty else { return }
+                    searchHandoff = trimmed
+                    query = ""
+                    selection = .search
+                }
 
             if Platform.supportsBarcodeScanner {
                 Divider()
@@ -177,7 +193,7 @@ struct HomeView: View {
                 }
             }
         }
-        .task(id: favorites.count) {
+        .task(id: reloadKey) {
             guard !shownFavorites.isEmpty else { return }
             await favoritesModel.refresh(products: shownFavorites.map(\.product),
                                          using: appEnvironment)
@@ -188,6 +204,17 @@ struct HomeView: View {
     /// eine Anfrage – die vollständige Liste steht im eigenen Bereich.
     private var shownFavorites: [FavoriteProduct] {
         Array(favorites.prefix(4))
+    }
+
+    /// Wann Favoriten und Deals neu geladen werden: wenn sich die Favoriten
+    /// **oder** der Bezugspunkt ändern.
+    ///
+    /// Vorher hing es nur an den Favoriten. Traf der Standort erst nach dem
+    /// Öffnen der Startseite ein – der Normalfall direkt nach der Freigabe –,
+    /// blieb „Kein Bezugspunkt" stehen, bis man einen Favoriten hinzufügte.
+    private var reloadKey: HomeReloadKey {
+        HomeReloadKey(favoriteCount: favorites.count,
+                      coordinate: appEnvironment.activeCoordinate)
     }
 
     // MARK: - Deals (#28)
@@ -251,11 +278,17 @@ struct HomeView: View {
                 }
             }
         }
-        .task(id: favorites.count) {
+        .task(id: reloadKey) {
             await dealsModel.load(using: appEnvironment,
                                   favoriteIDs: Set(favorites.map(\.productID)))
         }
     }
+}
+
+/// Schlüssel für das Neuladen der Startseite.
+private struct HomeReloadKey: Equatable {
+    let favoriteCount: Int
+    let coordinate: Coordinate?
 }
 
 #Preview {

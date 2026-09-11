@@ -11,11 +11,46 @@ public struct OpenPricesClient: Sendable {
 
     private let runner: RequestRunner
     private let host: String
+    private let homeRegion: HomeRegion
+
+    /// Das Land, fuer das die App gebaut ist, samt einem Kreis, der es
+    /// vollstaendig abdeckt.
+    ///
+    /// Gebraucht, wenn es keinen Bezugspunkt gibt. Ohne Ortsangabe liefe die
+    /// Abfrage weltweit -- und gemessen am 2026-09-11 stammten fuer Nutella
+    /// 400 g von den 100 neuesten Preisen 96 aus Frankreich und keiner aus
+    /// Deutschland. Die App haette einen franzoesischen Preis als
+    /// guenstigsten ausgewiesen.
+    ///
+    /// Der Kreis grenzt die Abfrage vorab ein, sonst reichen 100 Treffer
+    /// nicht bis zu den deutschen. Der Laendercode entscheidet danach
+    /// endgueltig, weil der Kreis zwangslaeufig in Nachbarlaender reicht.
+    public struct HomeRegion: Sendable {
+        public let countryCode: String
+        public let center: Coordinate
+        public let radiusKm: Double
+
+        public init(countryCode: String, center: Coordinate, radiusKm: Double) {
+            self.countryCode = countryCode.uppercased()
+            self.center = center
+            self.radiusKm = radiusKm
+        }
+
+        /// Deutschland: geografischer Mittelpunkt; 500 km reichen bis Sylt
+        /// und Oberstdorf.
+        public static let germany = HomeRegion(
+            countryCode: "DE",
+            center: Coordinate(latitude: 51.1657, longitude: 10.4515),
+            radiusKm: 500
+        )
+    }
 
     public init(transport: HTTPTransport = URLSessionTransport(),
-                host: String = "prices.openfoodfacts.org") {
+                host: String = "prices.openfoodfacts.org",
+                homeRegion: HomeRegion = .germany) {
         self.runner = RequestRunner(transport: transport)
         self.host = host
+        self.homeRegion = homeRegion
     }
 
     // MARK: - Preise zu einem Produkt
@@ -42,17 +77,20 @@ public struct OpenPricesClient: Sendable {
             URLQueryItem(name: "order_by", value: "-date")
         ]
 
-        if let near, near.isValid {
+        let hasReferencePoint = near?.isValid == true
+        if let near, hasReferencePoint {
             items.append(URLQueryItem(name: "lat", value: String(near.latitude)))
             items.append(URLQueryItem(name: "lon", value: String(near.longitude)))
             items.append(URLQueryItem(name: "radius_km", value: String(max(1, radiusKm))))
+        } else {
+            items.append(contentsOf: homeRegionItems)
         }
         if let notOlderThan {
             items.append(URLQueryItem(name: "date__gte",
                                       value: Self.dayFormatter.string(from: notOlderThan)))
         }
 
-        return try await fetch(items)
+        return try await fetch(items, onlyHomeCountry: !hasReferencePoint)
     }
 
     /// Preisverlauf eines Produkts, unabhaengig vom Ort.
@@ -65,12 +103,14 @@ public struct OpenPricesClient: Sendable {
         let digits = barcode.filter(\.isNumber)
         guard !digits.isEmpty else { return [] }
 
+        // Ein Verlauf ueber Laendergrenzen hinweg waere keiner: Er mischt
+        // Maerkte mit anderem Preisniveau. Deshalb nur das Heimatland.
         return try await fetch([
             URLQueryItem(name: "product_code", value: digits),
             URLQueryItem(name: "date__gte", value: Self.dayFormatter.string(from: since)),
             URLQueryItem(name: "size", value: String(min(100, max(1, limit)))),
             URLQueryItem(name: "order_by", value: "date")
-        ])
+        ] + homeRegionItems, onlyHomeCountry: true)
     }
 
     /// Aktuelle Aktionspreise im Umkreis.
@@ -106,8 +146,22 @@ public struct OpenPricesClient: Sendable {
         }
     }
 
-    private func fetch(_ queryItems: [URLQueryItem]) async throws -> [PriceObservation] {
-        try await fetchPage(queryItems).items.compactMap { $0.toObservation() }
+    private func fetch(_ queryItems: [URLQueryItem],
+                       onlyHomeCountry: Bool = false) async throws -> [PriceObservation] {
+        let observations = try await fetchPage(queryItems).items.compactMap { $0.toObservation() }
+        guard onlyHomeCountry else { return observations }
+        // Ohne bekannten Laendercode laesst sich nicht sagen, ob der Preis aus
+        // dem Heimatland stammt -- also faellt er heraus, statt es anzunehmen.
+        return observations.filter { $0.store?.countryCode == homeRegion.countryCode }
+    }
+
+    /// Abfrageteile fuer den Kreis um das Heimatland.
+    private var homeRegionItems: [URLQueryItem] {
+        [
+            URLQueryItem(name: "lat", value: String(homeRegion.center.latitude)),
+            URLQueryItem(name: "lon", value: String(homeRegion.center.longitude)),
+            URLQueryItem(name: "radius_km", value: String(homeRegion.radiusKm))
+        ]
     }
 
     private func fetchPage(_ queryItems: [URLQueryItem]) async throws -> OpenPricesPage {
@@ -301,7 +355,8 @@ struct OpenPricesLocationDTO: Decodable {
             postalCode: osmAddressPostcode,
             city: osmAddressCity,
             openingHoursRaw: nil,
-            websiteURL: websiteURL.flatMap(URL.init(string:))
+            websiteURL: websiteURL.flatMap(URL.init(string:)),
+            countryCode: osmAddressCountryCode
         )
     }
 }
