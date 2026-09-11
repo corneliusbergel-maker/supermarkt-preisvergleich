@@ -57,4 +57,10 @@ public enum RetailerRegistry {
               trimmed.dropFirst().allSatisfy(\.isNumber) else { return nil }
         return "wd:\(trimmed)"
     }
+
+    /// Stammt die Kennung aus Wikidata? Dann ist der Laden als Filiale einer
+    /// erfassten Marke eingetragen -- und nicht als Einzelgeschäft.
+    public static func isWikidataIdentifier(_ id: String) -> Bool {
+        id.hasPrefix("wd:")
+    }
 }

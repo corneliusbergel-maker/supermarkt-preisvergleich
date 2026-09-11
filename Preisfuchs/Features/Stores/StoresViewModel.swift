@@ -45,7 +45,7 @@ final class StoresViewModel {
 
             let settings = environment.settings
             let entries = found
-                .filter { settings.includes(retailer: $0.retailer) }
+                .filter { settings.includes(retailer: $0.retailer) && Self.isChainStore($0) }
                 .map { store in
                     Entry(store: store,
                           distanceMeters: GeoDistance.straightLineMeters(from: coordinate,
@@ -72,5 +72,18 @@ final class StoresViewModel {
             state = .failed(message: "Die Filialen konnten nicht geladen werden.",
                             isRetryable: true)
         }
+    }
+
+    /// Filialen einer Kette: aus der Auswahlliste oder als Marke in Wikidata
+    /// erfasst (Globus, tegut, Bio Company ...).
+    ///
+    /// Kioske und Spätis ohne Markeneintrag bleiben aus der Filialsuche
+    /// heraus. Mit ihnen stieg die Zahl in Berlin-Mitte von 228 auf 1166, und
+    /// die 25 nächsten auf der Karte waren fast nur noch Spätis. Ihre Preise
+    /// zählen im Preisvergleich trotzdem mit.
+    static func isChainStore(_ store: Store) -> Bool {
+        let id = store.retailer.id
+        if RetailerRegistry.isWikidataIdentifier(id) { return true }
+        return AppSettings.selectableRetailerIDs.contains(id)
     }
 }

@@ -53,6 +53,16 @@ final class RetailerRegistryTests: XCTestCase {
         XCTAssertNil(RetailerRegistry.identifier(forWikidata: nil))
     }
 
+    /// Die Filialsuche zeigt nur Ketten. Eine Wikidata-Kennung weist einen
+    /// Laden als Filiale einer erfassten Marke aus, ein bloßer Name nicht.
+    func testWikidataIdentifiersAreRecognised() throws {
+        let fromWikidata = try XCTUnwrap(RetailerRegistry.identifier(forWikidata: "Q879858"))
+        XCTAssertTrue(RetailerRegistry.isWikidataIdentifier(fromWikidata))
+
+        let fromName = try XCTUnwrap(RetailerRegistry.identifier(forBrand: "Lido Multishop"))
+        XCTAssertFalse(RetailerRegistry.isWikidataIdentifier(fromName))
+    }
+
     /// Der Haendlerfilter der App arbeitet mit diesen Kennungen -- wenn sie
     /// nicht stabil sind, verschluckt er Treffer.
     func testFilteringByIdentifierCatchesBothSpellings() {
