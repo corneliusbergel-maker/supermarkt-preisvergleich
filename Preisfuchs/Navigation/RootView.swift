@@ -70,14 +70,6 @@ struct RootView: View {
         }
         .background(Theme.ink.ignoresSafeArea())
         .tint(Theme.accent)
-        .safeAreaInset(edge: .top) {
-            // Sagt ausdruecklich, wenn gerade zwischengespeicherte Daten
-            // gezeigt werden. Ohne diesen Hinweis waere der Zwischenspeicher
-            // eine Luege -- die Preise saehen aus wie eben geladen.
-            if let text = appEnvironment.freshness.bannerText {
-                offlineBanner(text)
-            }
-        }
         // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
         // Produkt und Preise kommen aus den echten APIs.
         .task {
@@ -107,6 +99,19 @@ struct RootView: View {
         .task { await appEnvironment.runHourlyRefresh() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { appEnvironment.refreshIfStale() }
+        }
+    }
+
+    /// Sagt ausdrücklich, wenn gerade zwischengespeicherte Daten gezeigt
+    /// werden. Ohne diesen Hinweis wäre der Zwischenspeicher eine Lüge – die
+    /// Preise sähen aus wie eben geladen.
+    ///
+    /// Sitzt im Inhaltsbereich, nicht über der ganzen App: Auf dem iPad lag er
+    /// sonst über der Titelzeile der Seitenleiste.
+    @ViewBuilder
+    private var freshnessBanner: some View {
+        if let text = appEnvironment.freshness.bannerText {
+            offlineBanner(text)
         }
     }
 
@@ -140,6 +145,7 @@ struct RootView: View {
                 screen(for: selection)
                     .navigationBarTitleDisplayMode(.inline)
             }
+            .safeAreaInset(edge: .top) { freshnessBanner }
 
             PillTabBar(selection: $selection)
                 .padding(.horizontal, Theme.Spacing.l)
@@ -164,6 +170,7 @@ struct RootView: View {
             NavigationStack(path: $path) {
                 screen(for: selection)
             }
+            .safeAreaInset(edge: .top) { freshnessBanner }
         }
     }
 

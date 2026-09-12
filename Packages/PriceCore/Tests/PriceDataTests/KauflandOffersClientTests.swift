@@ -63,7 +63,8 @@ final class KauflandOffersClientTests: XCTestCase {
     }
 
     func testBasePriceIsWrittenTheGermanWay() throws {
-        XCTAssertEqual(try offer("ART.1183941_KAV.3634320").basePriceText, "1 kg = 2,66\u{00A0}€")
+        XCTAssertEqual(try offer("ART.1183941_KAV.3634320").basePriceText,
+                       "1\u{00A0}kg\u{00A0}=\u{00A0}2,66\u{00A0}€")
     }
 
     /// Der Kartenpreis darf nie als normaler Angebotspreis erscheinen.

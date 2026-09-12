@@ -226,15 +226,17 @@ enum KauflandOfferParser {
             return Int(value.rounded())
         }
 
-        /// „(1 kg = 2.66)“ wird zu „1 kg = 2,66 €“ – mit geschütztem Leerzeichen
-        /// vor dem Euro, sonst landet das Zeichen allein in der nächsten Zeile.
+        /// „(1 kg = 2.66)“ wird zu „1 kg = 2,66 €“ – durchgehend mit geschützten
+        /// Leerzeichen. Sonst bricht die Zeile mitten im Grundpreis um, und auf
+        /// dem iPhone stand „= 5,98 €“ allein in der nächsten Zeile.
         private static func basePrice(_ text: String?) -> String? {
             guard var text else { return nil }
             text = text.trimmingCharacters(in: CharacterSet(charactersIn: "()* "))
             text = text.replacingOccurrences(of: "(\\d)\\.(\\d)", with: "$1,$2",
                                              options: .regularExpression)
             guard !text.isEmpty else { return nil }
-            return text.hasSuffix("€") ? text : text + "\u{00A0}€"
+            let withCurrency = text.hasSuffix("€") ? text : text + " €"
+            return withCurrency.replacingOccurrences(of: " ", with: "\u{00A0}")
         }
     }
 }
