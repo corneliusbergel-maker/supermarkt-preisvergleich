@@ -10,6 +10,8 @@ import Foundation
 public struct RetailerOffer: Hashable, Sendable, Identifiable {
 
     public let id: String
+
+    /// Anzeigename der Kette, z. B. „ALDI SÜD“.
     public let retailerName: String
 
     /// Bei Markenartikeln oft die Marke („MONTORSI“), sonst der Artikel.
@@ -27,8 +29,12 @@ public struct RetailerOffer: Hashable, Sendable, Identifiable {
     /// Preis mit Kundenkarte (etwa Kaufland Card), soweit angegeben.
     public let loyaltyPrice: Money?
 
-    /// Preis vor der Aktion, soweit die Kette ihn nennt.
+    /// Vergleichspreis, soweit die Kette ihn nennt.
     public let regularPrice: Money?
+
+    /// Wie die Kette den Vergleichspreis nennt, etwa „UVP“. `nil` heißt:
+    /// der Preis vor der Aktion.
+    public let regularPriceLabel: String?
 
     /// Ersparnis in Prozent ohne und mit Kundenkarte, wie die Kette sie angibt.
     public let discountPercent: Int?
@@ -37,12 +43,19 @@ public struct RetailerOffer: Hashable, Sendable, Identifiable {
     /// Verkaufseinheit, z. B. „je 750-g-Netz“.
     public let unit: String?
 
-    /// Grundpreis als Text der Kette, z. B. „1 kg = 2,66 €“.
+    /// Grundpreis als Text, z. B. „1 kg = 2,66 €“.
     public let basePriceText: String?
 
-    /// Erster und letzter Gültigkeitstag, beide einschließlich.
+    /// Pfand, das zum Preis hinzukommt.
+    public let deposit: Money?
+
+    /// Erster Gültigkeitstag.
     public let validFrom: Date
-    public let validTo: Date
+
+    /// Letzter Gültigkeitstag, einschließlich. `nil`, wenn die Kette keinen
+    /// nennt – ALDI SÜD etwa schreibt nur „verfügbar seit“. Ein Enddatum
+    /// dazuzudenken wäre erfunden.
+    public let validTo: Date?
 
     /// Seite, von der das Angebot stammt.
     public let sourceURL: URL
@@ -55,12 +68,14 @@ public struct RetailerOffer: Hashable, Sendable, Identifiable {
                 price: Money?,
                 loyaltyPrice: Money? = nil,
                 regularPrice: Money? = nil,
+                regularPriceLabel: String? = nil,
                 discountPercent: Int? = nil,
                 loyaltyDiscountPercent: Int? = nil,
                 unit: String? = nil,
                 basePriceText: String? = nil,
+                deposit: Money? = nil,
                 validFrom: Date,
-                validTo: Date,
+                validTo: Date?,
                 sourceURL: URL) {
         self.id = id
         self.retailerName = retailerName
@@ -70,10 +85,12 @@ public struct RetailerOffer: Hashable, Sendable, Identifiable {
         self.price = price
         self.loyaltyPrice = loyaltyPrice
         self.regularPrice = regularPrice
+        self.regularPriceLabel = regularPriceLabel
         self.discountPercent = discountPercent
         self.loyaltyDiscountPercent = loyaltyDiscountPercent
         self.unit = unit
         self.basePriceText = basePriceText
+        self.deposit = deposit
         self.validFrom = validFrom
         self.validTo = validTo
         self.sourceURL = sourceURL
@@ -103,13 +120,15 @@ public struct RetailerOffer: Hashable, Sendable, Identifiable {
         return calendar
     }()
 
-    /// Gilt das Angebot zu diesem Zeitpunkt? Erster und letzter Tag zählen mit.
+    /// Gilt das Angebot zu diesem Zeitpunkt? Erster und letzter Tag zählen mit;
+    /// ohne Enddatum gilt es ab dem ersten Tag.
     public func isValid(on date: Date) -> Bool {
         let calendar = Self.calendar
-        let start = calendar.startOfDay(for: validFrom)
+        guard date >= calendar.startOfDay(for: validFrom) else { return false }
+        guard let validTo else { return true }
         guard let end = calendar.date(byAdding: .day, value: 1,
                                       to: calendar.startOfDay(for: validTo)) else { return false }
-        return date >= start && date < end
+        return date < end
     }
 
     /// Beginnt das Angebot erst nach dem Tag dieses Zeitpunkts?

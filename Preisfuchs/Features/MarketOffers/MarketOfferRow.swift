@@ -3,8 +3,9 @@ import PriceCore
 
 /// Ein Angebot direkt von der Kette, ohne Produktbild.
 ///
-/// Bilder aus dem Prospekt zeigt die App bewusst nicht: Die Rechte daran liegen
-/// bei der Kette, und für Text und Preis reicht der Hinweis auf die Quelle.
+/// Bilder aus den Prospekten zeigt die App bewusst nicht: Die Rechte daran
+/// liegen bei den Ketten, und für Text und Preis reicht der Hinweis auf die
+/// Quelle.
 struct MarketOfferRow: View {
 
     let offer: RetailerOffer
@@ -12,11 +13,19 @@ struct MarketOfferRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.m) {
             VStack(alignment: .leading, spacing: 3) {
-                if let brand = offer.brandLine {
-                    Text(brand)
-                        .font(.caption)
-                        .foregroundStyle(Theme.accent)
-                        .lineLimit(1)
+                HStack(spacing: Theme.Spacing.xs) {
+                    Text(offer.retailerName)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Theme.textSecondary)
+                    if let brand = offer.brandLine {
+                        Text("·")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textTertiary)
+                        Text(brand)
+                            .font(.caption)
+                            .foregroundStyle(Theme.accent)
+                            .lineLimit(1)
+                    }
                 }
 
                 Text(offer.displayName)
@@ -82,6 +91,12 @@ struct MarketOfferRow: View {
                     DealBadge(percentOff: percent)
                 }
             }
+
+            if let deposit = offer.deposit {
+                Text("zzgl. \(deposit.roundedToCents.formatted()) Pfand")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+            }
         }
     }
 
@@ -93,11 +108,19 @@ struct MarketOfferRow: View {
     }
 
     private func oldPrice(_ money: Money) -> some View {
-        Text(money.roundedToCents.formatted())
-            .font(.caption)
-            .strikethrough()
-            .foregroundStyle(Theme.textTertiary)
-            .accessibilityLabel("vorher \(money.roundedToCents.formatted())")
+        HStack(spacing: 3) {
+            if let label = offer.regularPriceLabel {
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            Text(money.roundedToCents.formatted())
+                .font(.caption)
+                .strikethrough()
+                .foregroundStyle(Theme.textTertiary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(offer.regularPriceLabel ?? "vorher") \(money.roundedToCents.formatted())")
     }
 
     private var detailLine: String? {
@@ -108,9 +131,12 @@ struct MarketOfferRow: View {
     private var validity: String {
         let formatter = Self.dayFormatter
         if offer.startsAfter(Date()) {
-            return "gültig ab \(formatter.string(from: offer.validFrom))"
+            return "ab \(formatter.string(from: offer.validFrom))"
         }
-        return "gültig bis \(formatter.string(from: offer.validTo))"
+        guard let validTo = offer.validTo else {
+            return "verfügbar seit \(formatter.string(from: offer.validFrom))"
+        }
+        return "gültig bis \(formatter.string(from: validTo))"
     }
 
     private static let dayFormatter: DateFormatter = {
@@ -122,26 +148,34 @@ struct MarketOfferRow: View {
     }()
 }
 
-/// Quellenhinweis unter Kaufland-Angeboten.
+/// Quellenhinweis unter den Angeboten der Ketten.
 struct MarketOffersSourceNote: View {
 
-    let fetchedAt: Date?
+    let sources: [MarketOffersStore.Source]
+    let store: MarketOffersStore
 
     var body: some View {
-        Text(text)
-            .font(.caption)
-            .foregroundStyle(Theme.textTertiary)
-            .fixedSize(horizontal: false, vertical: true)
+        if !sources.isEmpty {
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private var text: String {
-        var source = "Direkt von kaufland.de"
-        if let fetchedAt {
-            let time = fetchedAt.formatted(.dateTime.hour().minute()
-                .locale(Locale(identifier: "de_DE")))
-            source += ", Stand \(time) Uhr"
+        let parts = sources.map { source -> String in
+            guard let fetchedAt = store.status(of: source).fetchedAt else { return source.host }
+            let time = fetchedAt.formatted(.dateTime.hour().minute().locale(Locale(identifier: "de_DE")))
+            return "\(source.host) (Stand \(time) Uhr)"
         }
-        return source + ". Standardauswahl ohne gewählte Filiale – einzelne Märkte "
+        let list: String
+        if parts.count > 1 {
+            list = parts.dropLast().joined(separator: ", ") + " und " + (parts.last ?? "")
+        } else {
+            list = parts.first ?? ""
+        }
+        return "Direkt von \(list). Standardauswahl ohne gewählte Filiale – einzelne Märkte "
             + "können abweichen. Aktualisiert sich stündlich."
     }
 }

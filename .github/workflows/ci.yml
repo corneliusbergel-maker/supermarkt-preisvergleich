@@ -309,8 +309,9 @@ jobs:
           shot 06-Favoriten 8 -uiTab favorites
           shot 07-Liste 8 -uiTab list
           shot 08-Einstellungen 8 -uiTab settings
-          # Wochenangebote direkt von kaufland.de (echte Seite, echte Preise).
-          shot 09-Kaufland-Angebote 20 -uiRoute angebote
+          # Angebote direkt von kaufland.de, aldi-nord.de und aldi-sued.de
+          # (echte Seiten, echte Preise). ALDI SÜD braucht mehrere Abrufe.
+          shot 09-Markt-Angebote 40 -uiRoute angebote
 
           ls -la screenshots
 

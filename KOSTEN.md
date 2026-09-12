@@ -59,12 +59,22 @@ App selbst, sondern Apples Vertriebsweg:
 | **Unsere Maßnahme** | Ehrlicher `User-Agent`, höchstens stündlich und nur bei geöffneter App, frühestens nach 10 Minuten erneut, zwei Versuche. Kein Standort wird mitgeschickt. |
 | **Risiko** | Kaufland kann die Seite jederzeit ändern oder sperren. Dann zeigt die App einen Fehler statt veralteter Angebote. |
 
+### ALDI Nord und ALDI SÜD — 0 €
+
+| | ALDI Nord | ALDI SÜD |
+|---|---|---|
+| **Seite** | `aldi-nord.de/angebote.html` | `aldi-sued.de/angebote` und Tagesseiten `/angebote/JJJJ-MM-TT` |
+| **Kosten / Key** | 0 €, kein Key | 0 €, kein Key |
+| **Nutzung** | `robots.txt` erlaubt die Seite; Impressum ohne Nutzungseinschränkung (geprüft 2026-09-12) | `robots.txt` erlaubt Angebots- und Unterseiten (`?page=`); Impressum ohne Einschränkung, Nutzungsbedingungen betreffen nur das Kundenkonto (geprüft 2026-09-12) |
+| **Umfang je Abruf** | 1 Seite, komprimiert rund 100 KB | Übersicht plus je Aktionstag 1–3 Seiten, zusammen bis zu rund 20 Abrufe à ~125 KB |
+| **Unsere Maßnahme** | Ehrlicher `User-Agent`, frühestens nach 10 Minuten erneut | Ehrlicher `User-Agent`, höchstens einmal pro Stunde, nur Aktionstage ±7 Tage, höchstens 6 Seiten je Tag |
+
 ### Angebotsseiten der übrigen Märkte — reine Links, 0 €
 
 Die Startseite verlinkt die offiziellen Angebotsseiten von REWE, EDEKA,
-Lidl, ALDI SÜD, ALDI Nord, PENNY, Netto Marken-Discount und NORMA. Dort wird
-**nichts ausgelesen** — diese Ketten untersagen oder blockieren automatische
-Abrufe. Begründung und Belege:
+Lidl, PENNY, Netto Marken-Discount und NORMA. Dort wird **nichts
+ausgelesen** — diese Ketten erlauben es nicht oder geben ihre Angebote nur
+nach Marktauswahl heraus. Begründung und Belege:
 [DATENQUELLEN-SUPERMAERKTE.md](DATENQUELLEN-SUPERMAERKTE.md).
 
 ### Preise beitragen — ebenfalls 0 €

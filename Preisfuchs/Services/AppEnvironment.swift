@@ -24,7 +24,7 @@ final class AppEnvironment {
     let prices: OpenPricesClient
     let stores: OverpassClient
 
-    /// Wochenangebote direkt von der Kette (Kaufland).
+    /// Angebote direkt von den Ketten (Kaufland, ALDI Nord, ALDI SÜD).
     let marketOffers: MarketOffersStore
 
     /// Zeitpunkt der zuletzt angestoßenen Aktualisierung. Startseite und
@@ -75,7 +75,7 @@ final class AppEnvironment {
 
         // Über denselben Transport: Ohne Netz zeigt die Liste den letzten Stand
         // und das Banner sagt, von wann er ist.
-        self.marketOffers = MarketOffersStore(client: KauflandOffersClient(transport: transport))
+        self.marketOffers = MarketOffersStore.standard(transport: transport)
 
         // Overpass bleibt beim einfachen Transport: Es fragt per POST ab, und
         // POST wird bewusst nicht auf Platte gelegt. Die Filialen haben

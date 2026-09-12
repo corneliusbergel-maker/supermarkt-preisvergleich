@@ -40,7 +40,7 @@ struct HomeView: View {
                 quickActions
                 favoritesSection
                 dealsSection
-                if appEnvironment.settings.isEnabled(retailerNamed: MarketOffersStore.retailerName) {
+                if !appEnvironment.marketOffers.enabledSources(appEnvironment.settings).isEmpty {
                     MarketOffersSection {
                         path.append(AppRoute.marketOffers)
                     }
@@ -354,8 +354,9 @@ struct HomeView: View {
                 }
 
                 Text("Die Angebote stehen tagesaktuell auf den Seiten der Märkte. Die von "
-                     + "Kaufland holt Preisfuchs direkt in die App; die übrigen Ketten "
-                     + "untersagen oder blockieren das Auslesen ihrer Seiten.")
+                     + "Kaufland, ALDI Nord und ALDI SÜD holt Preisfuchs direkt in die App; "
+                     + "die übrigen Ketten erlauben das nicht oder geben ihre Angebote nur "
+                     + "nach Marktauswahl heraus.")
                     .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)

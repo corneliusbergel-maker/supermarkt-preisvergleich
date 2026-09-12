@@ -1,26 +1,39 @@
 import SwiftUI
 import PriceCore
 
-/// Alle Kaufland-Wochenangebote, durchsuchbar.
+/// Alle Angebote direkt von den Ketten, durchsuchbar und nach Kette filterbar.
 struct MarketOffersView: View {
 
     enum Period: String, CaseIterable, Identifiable {
-        case current = "Diese Woche"
+        case current = "Aktuell"
         case upcoming = "Demnächst"
         var id: String { rawValue }
     }
+
+    private static let allChains = "alle"
 
     @Environment(AppEnvironment.self) private var appEnvironment
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var query = ""
     @State private var period: Period = .current
+    @State private var chain = MarketOffersView.allChains
 
     private var isWide: Bool { sizeClass != .compact }
     private var store: MarketOffersStore { appEnvironment.marketOffers }
 
+    private var enabledSources: [MarketOffersStore.Source] {
+        store.enabledSources(appEnvironment.settings)
+    }
+
+    private var selectedSources: [MarketOffersStore.Source] {
+        chain == Self.allChains ? enabledSources : enabledSources.filter { $0.id == chain }
+    }
+
     private var shown: [RetailerOffer] {
-        let base = period == .current ? store.currentOffers : store.upcomingOffers
+        let base = period == .current
+            ? store.currentOffers(from: selectedSources)
+            : store.upcomingOffers(from: selectedSources)
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !term.isEmpty else { return base }
         return base.filter { offer in
@@ -35,6 +48,16 @@ struct MarketOffersView: View {
             LazyVStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 searchField
 
+                if enabledSources.count > 1 {
+                    Picker("Kette", selection: $chain) {
+                        Text("Alle").tag(Self.allChains)
+                        ForEach(enabledSources) { source in
+                            Text(source.displayName).tag(source.id)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
                 Picker("Zeitraum", selection: $period) {
                     ForEach(Period.allCases) { period in
                         Text(period.rawValue).tag(period)
@@ -42,16 +65,19 @@ struct MarketOffersView: View {
                 }
                 .pickerStyle(.segmented)
 
-                MarketOffersSourceNote(fetchedAt: store.fetchedAt)
+                MarketOffersSourceNote(sources: selectedSources, store: store)
 
                 list
 
-                Link(destination: MarketOffersStore.sourceURL) {
-                    Label("Angebotsseite von Kaufland öffnen", systemImage: "arrow.up.right.square")
-                        .font(.cardBody)
-                        .foregroundStyle(Theme.accent)
+                if selectedSources.count == 1, let source = selectedSources.first {
+                    Link(destination: source.pageURL) {
+                        Label("Angebotsseite von \(source.displayName) öffnen",
+                              systemImage: "arrow.up.right.square")
+                            .font(.cardBody)
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .padding(.top, Theme.Spacing.s)
                 }
-                .padding(.top, Theme.Spacing.s)
             }
             .padding(.horizontal, isWide ? Theme.Spacing.xl : Theme.Spacing.l)
             .floatingTabBarInset(isCompact: !isWide)
@@ -59,9 +85,9 @@ struct MarketOffersView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Theme.ink)
-        .navigationTitle("Kaufland-Angebote")
-        .refreshable { await store.refresh(force: true) }
-        .task { await store.refresh() }
+        .navigationTitle("Angebote der Märkte")
+        .refreshable { await store.refresh(enabledSources, force: true) }
+        .task { await store.refresh(enabledSources) }
     }
 
     private var searchField: some View {
@@ -91,7 +117,7 @@ struct MarketOffersView: View {
                 MarketOfferRow(offer: offer)
             }
         } else {
-            switch store.state {
+            switch store.combinedState(of: selectedSources) {
             case .idle, .loading:
                 GlassCard {
                     HStack(spacing: Theme.Spacing.m) {
@@ -108,7 +134,7 @@ struct MarketOffersView: View {
                                title: "Angebote nicht abrufbar",
                                message: message,
                                actionTitle: isRetryable ? "Erneut versuchen" : nil) {
-                        Task { await store.refresh(force: true) }
+                        Task { await store.refresh(selectedSources, force: true) }
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -118,7 +144,7 @@ struct MarketOffersView: View {
                     EmptyState(symbol: "tag",
                                title: query.isEmpty ? "Keine Angebote" : "Nichts gefunden",
                                message: query.isEmpty
-                                   ? "Für diesen Zeitraum hat Kaufland keine Angebote veröffentlicht."
+                                   ? "Für diesen Zeitraum sind keine Angebote veröffentlicht."
                                    : "Kein Angebot passt zu „\(query)“.")
                         .frame(maxWidth: .infinity)
                 }

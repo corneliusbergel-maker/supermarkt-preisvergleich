@@ -42,6 +42,21 @@ final class RetailerOfferTests: XCTestCase {
         XCTAssertNotNil(RetailerOffer.day(from: "2026-09-12"))
     }
 
+    /// ALDI SÜD nennt nur „verfügbar seit“ – ohne Enddatum gilt das Angebot ab
+    /// dem ersten Tag.
+    func testOfferWithoutEndDate() {
+        let openEnded = RetailerOffer(id: "offen",
+                                      retailerName: "ALDI SÜD",
+                                      title: "Test",
+                                      price: Money(amount: 1),
+                                      validFrom: RetailerOffer.day(from: "2026-09-11")!,
+                                      validTo: nil,
+                                      sourceURL: URL(string: "https://www.aldi-sued.de/")!)
+        XCTAssertFalse(openEnded.isValid(on: berlin(9, 10, 23, 0)))
+        XCTAssertTrue(openEnded.isValid(on: berlin(9, 11, 8, 0)))
+        XCTAssertTrue(openEnded.isValid(on: berlin(9, 30, 8, 0)))
+    }
+
     func testCardOnlyOffer() {
         let cardOnly = offer(from: "2026-09-10", to: "2026-09-16",
                              price: nil, loyaltyPrice: Money(amount: Decimal(string: "0.69")!))
