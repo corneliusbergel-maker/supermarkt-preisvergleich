@@ -17,9 +17,10 @@ enum PriceAlertService {
 
     /// Frühestens nach dieser Zeit erneut prüfen.
     ///
-    /// iOS behandelt das als Wunsch, nicht als Zusage. Häufigeres Anfragen
-    /// bringt nichts und belastet nur den Akku.
-    static let minimumInterval: TimeInterval = 6 * 60 * 60
+    /// Stündlich, im selben Takt wie die Startseite. iOS behandelt das als
+    /// Wunsch, nicht als Zusage: Wann die App wirklich Rechenzeit bekommt,
+    /// legt das System nach Akkustand und Nutzung fest.
+    static let minimumInterval: TimeInterval = 60 * 60
 
     /// Wie viele Alarme je Durchlauf geprüft werden.
     ///

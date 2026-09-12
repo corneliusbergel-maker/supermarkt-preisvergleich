@@ -38,8 +38,11 @@ struct FavoritesView: View {
             ProductDetailView(product: product)
         }
         .refreshable { await refresh() }
-        // Neu laden, sobald der Bezugspunkt wechselt.
-        .task(id: appEnvironment.activeCoordinate) { await refresh() }
+        // Neu laden, sobald der Bezugspunkt wechselt – und stündlich.
+        .task(id: FavoritesReloadKey(coordinate: appEnvironment.activeCoordinate,
+                                     refreshTick: appEnvironment.refreshTick)) {
+            await refresh()
+        }
         .toolbar {
             if !favorites.isEmpty {
                 ToolbarItem(placement: .primaryAction) {
@@ -115,6 +118,11 @@ struct FavoritesView: View {
     }
 }
 
+private struct FavoritesReloadKey: Equatable {
+    let coordinate: Coordinate?
+    let refreshTick: Date
+}
+
 // MARK: - Eine Favoritenzeile
 
 struct FavoriteRow: View {
@@ -124,18 +132,7 @@ struct FavoriteRow: View {
 
     var body: some View {
         HStack(spacing: Theme.Spacing.m) {
-            AsyncImage(url: product.imageURL) { phase in
-                switch phase {
-                case .success(let image): image.resizable().scaledToFit()
-                default:
-                    Image(systemName: "shippingbox")
-                        .font(.system(size: 18, weight: .light))
-                        .foregroundStyle(Theme.textTertiary)
-                }
-            }
-            .frame(width: 48, height: 48)
-            .background(Theme.surfaceRaised,
-                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            ProductImage(url: product.imageURL, size: 48)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(product.name)

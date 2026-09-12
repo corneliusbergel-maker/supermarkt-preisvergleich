@@ -78,17 +78,6 @@ struct DealRow: View {
     }
 
     private var thumbnail: some View {
-        AsyncImage(url: deal.product?.imageURL) { phase in
-            switch phase {
-            case .success(let image): image.resizable().scaledToFit()
-            default:
-                Image(systemName: "tag")
-                    .font(.system(size: 18, weight: .light))
-                    .foregroundStyle(Theme.textTertiary)
-            }
-        }
-        .frame(width: 48, height: 48)
-        .background(Theme.surfaceRaised,
-                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        ProductImage(url: deal.product?.imageURL, size: 48, placeholderSymbol: "tag")
     }
 }

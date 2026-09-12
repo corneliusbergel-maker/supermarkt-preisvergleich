@@ -81,18 +81,7 @@ struct ProductDetailView: View {
     private var header: some View {
         GlassCard {
             HStack(alignment: .top, spacing: Theme.Spacing.l) {
-                AsyncImage(url: model.displayProduct.imageURL) { phase in
-                    switch phase {
-                    case .success(let image): image.resizable().scaledToFit()
-                    default:
-                        Image(systemName: "shippingbox")
-                            .font(.system(size: 28, weight: .light))
-                            .foregroundStyle(Theme.textTertiary)
-                    }
-                }
-                .frame(width: 84, height: 84)
-                .background(Theme.surfaceRaised,
-                            in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                ProductImage(url: model.displayProduct.imageURL, size: 84, cornerRadius: 16)
 
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                     if let brand = model.displayProduct.brand?.split(separator: ",").first {

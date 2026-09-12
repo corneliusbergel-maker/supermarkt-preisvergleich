@@ -223,18 +223,6 @@ struct ProductRow: View {
     private var thumbnail: some View {
         // Produktbilder fehlen bei vielen Datensätzen. Der Platzhalter ist
         // deshalb der Normalfall, nicht die Ausnahme.
-        AsyncImage(url: product.imageURL) { phase in
-            switch phase {
-            case .success(let image):
-                image.resizable().scaledToFit()
-            default:
-                Image(systemName: "shippingbox")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundStyle(Theme.textTertiary)
-            }
-        }
-        .frame(width: 52, height: 52)
-        .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 12,
-                                                              style: .continuous))
+        ProductImage(url: product.imageURL, size: 52)
     }
 }

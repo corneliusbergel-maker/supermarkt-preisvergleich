@@ -53,6 +53,7 @@ struct RootView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(AppEnvironment.self) private var appEnvironment
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var selection: Destination = LaunchOptions.initialDestination ?? .home
     @State private var path = NavigationPath()
@@ -99,6 +100,12 @@ struct RootView: View {
         // als reagiere sie nicht.
         .onChange(of: selection) { _, _ in
             path = NavigationPath()
+        }
+        // Stündlich neu laden, solange die App offen ist – und beim
+        // Zurückkehren, wenn der letzte Stand älter als eine Stunde ist.
+        .task { await appEnvironment.runHourlyRefresh() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { appEnvironment.refreshIfStale() }
         }
     }
 

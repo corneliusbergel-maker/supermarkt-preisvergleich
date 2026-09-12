@@ -46,7 +46,15 @@ App selbst, sondern Apples Vertriebsweg:
 | **Lizenz** | ODbL |
 | **Limits** | Keine Rate-Limit-Header gefunden (geprüft 2026-09-10). Pagination über `size`/`page`. |
 | **Kostenrisiko** | Sehr gering, siehe oben. |
-| **Unsere Maßnahme** | Ergebnisse cachen, `size` begrenzen, keine Hintergrund-Dauerabfragen. |
+| **Unsere Maßnahme** | Ergebnisse cachen, `size` begrenzen. Aktualisiert wird höchstens stündlich und nur Startseite und Favoriten, solange die App offen ist (seit 2026-09-12). |
+
+### Angebotsseiten der Märkte — reine Links, 0 €
+
+Die Startseite verlinkt die offiziellen Angebotsseiten von REWE, EDEKA,
+Kaufland, Lidl, ALDI SÜD, ALDI Nord, PENNY, Netto Marken-Discount und NORMA.
+Es wird **nichts ausgelesen** — keine Kette bietet eine Schnittstelle, und
+mehrere untersagen automatische Abrufe. Begründung und Belege:
+[DATENQUELLEN-SUPERMAERKTE.md](DATENQUELLEN-SUPERMAERKTE.md).
 
 ### Preise beitragen — ebenfalls 0 €
 
@@ -82,6 +90,7 @@ kosten.
 | MapKit | Kartenanzeige **und** Routenübergabe via `MKMapItem.openMaps` | 0 € |
 | CoreLocation | Standort, Entfernung | 0 € |
 | VisionKit | Barcode-Scanner (`DataScannerViewController`) | 0 € |
+| Vision | Produktfotos freistellen (`VNGenerateForegroundInstanceMaskRequest`), vollständig auf dem Gerät | 0 € |
 | Swift Charts | Preisverlauf-Diagramm | 0 € |
 | UserNotifications | lokale Benachrichtigungen | 0 € |
 | BackgroundTasks | `BGAppRefreshTask` für Preisprüfung | 0 € |

@@ -64,6 +64,44 @@ jobs:
             echo "❌ Fehler - siehe Protokoll des Schritts oben." >> "$GITHUB_STEP_SUMMARY"
           fi
 
+  cutout:
+    name: Freistellen pruefen
+    runs-on: macos-latest
+    # Vision braucht GPU oder Neural Engine. Ob die virtuelle Maschine der CI
+    # das bietet, ist offen - ein Fehlschlag hier blockiert deshalb nichts.
+    continue-on-error: true
+
+    steps:
+      - name: Quellcode holen
+        uses: actions/checkout@v7
+
+      - name: Produktfotos freistellen
+        run: |
+          set -euo pipefail
+          mkdir -p cutout
+          swiftc -O -target "$(uname -m)-apple-macos14.0" \
+            Preisfuchs/Services/ProductCutout.swift Tools/cutout-check/main.swift \
+            -o cutout/check
+          # Echte Fotos aus Open Food Facts; Adressen am 2026-09-12 ueber die
+          # Produkt-API ermittelt (Wagner Big City Cheese, Nutella 400 g).
+          UA="Preisfuchs-CI (+https://github.com/corneliusbergel-maker/supermarkt-preisvergleich)"
+          curl -sfL -A "$UA" -o cutout/wagner.jpg \
+            "https://images.openfoodfacts.org/images/products/400/923/300/5802/front_de.19.400.jpg"
+          curl -sfL -A "$UA" -o cutout/nutella.jpg \
+            "https://images.openfoodfacts.org/images/products/301/762/042/2003/front_en.879.400.jpg"
+          status=0
+          ./cutout/check cutout/wagner.jpg cutout/wagner-freigestellt.png || status=1
+          ./cutout/check cutout/nutella.jpg cutout/nutella-freigestellt.png || status=1
+          exit $status
+
+      - name: Hochladen
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: freistellen
+          path: cutout/*.*g
+          if-no-files-found: warn
+
   app:
     name: App bauen (${{ matrix.name }})
     runs-on: macos-latest

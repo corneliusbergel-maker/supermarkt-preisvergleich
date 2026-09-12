@@ -24,6 +24,15 @@ final class AppEnvironment {
     let prices: OpenPricesClient
     let stores: OverpassClient
 
+    /// Zeitpunkt der zuletzt angestoßenen Aktualisierung. Startseite und
+    /// Favoriten hängen ihr Neuladen daran.
+    private(set) var refreshTick = Date()
+
+    /// Solange die App offen ist, werden Preise und Angebote stündlich neu
+    /// geholt – und beim Zurückkehren in die App, wenn der letzte Stand älter
+    /// ist.
+    static let refreshInterval: TimeInterval = 60 * 60
+
     /// `settings`, `location` und `notifications` sind an den Hauptaktor
     /// gebunden. Sie duerfen deshalb **nicht** als Standardwert eines
     /// Parameters entstehen: Standardausdruecke werden ausserhalb der
@@ -88,4 +97,26 @@ final class AppEnvironment {
 
     /// Kann die App gerade Entfernungen ausweisen?
     var hasLocation: Bool { activeCoordinate != nil }
+
+    // MARK: - Aktualisieren
+
+    /// Stößt ein Neuladen an, wenn der letzte Stand älter als eine Stunde ist.
+    func refreshIfStale(now: Date = Date()) {
+        guard now.timeIntervalSince(refreshTick) >= Self.refreshInterval else { return }
+        refreshTick = now
+    }
+
+    /// Neuladen auf Wunsch, etwa beim Herunterziehen der Startseite.
+    func refreshNow() {
+        refreshTick = Date()
+    }
+
+    /// Läuft, solange die Oberfläche besteht, und stößt stündlich ein Neuladen an.
+    func runHourlyRefresh() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(Self.refreshInterval))
+            guard !Task.isCancelled else { return }
+            refreshTick = Date()
+        }
+    }
 }

@@ -40,12 +40,14 @@ struct HomeView: View {
                 quickActions
                 favoritesSection
                 dealsSection
+                retailerOffersSection
             }
             .padding(.horizontal, isWide ? Theme.Spacing.xl : Theme.Spacing.l)
             .floatingTabBarInset(isCompact: !isWide)
             .frame(maxWidth: 900, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
+        .refreshable { appEnvironment.refreshNow() }
         .background(Theme.ink)
         .navigationTitle("Start")
         .toolbar(isWide ? .visible : .hidden, for: .navigationBar)
@@ -207,14 +209,15 @@ struct HomeView: View {
     }
 
     /// Wann Favoriten und Deals neu geladen werden: wenn sich die Favoriten
-    /// **oder** der Bezugspunkt ändern.
+    /// oder der Bezugspunkt ändern – und stündlich über `refreshTick`.
     ///
     /// Vorher hing es nur an den Favoriten. Traf der Standort erst nach dem
     /// Öffnen der Startseite ein – der Normalfall direkt nach der Freigabe –,
     /// blieb „Kein Bezugspunkt" stehen, bis man einen Favoriten hinzufügte.
     private var reloadKey: HomeReloadKey {
         HomeReloadKey(favoriteCount: favorites.count,
-                      coordinate: appEnvironment.activeCoordinate)
+                      coordinate: appEnvironment.activeCoordinate,
+                      refreshTick: appEnvironment.refreshTick)
     }
 
     // MARK: - Deals (#28)
@@ -283,12 +286,78 @@ struct HomeView: View {
                                   favoriteIDs: Set(favorites.map(\.productID)))
         }
     }
+
+    // MARK: - Prospekte der Märkte
+
+    /// Links zu den offiziellen Angebotsseiten der eingeschalteten Ketten.
+    ///
+    /// Die Seiten selbst liest Preisfuchs nicht aus (siehe
+    /// `RetailerOffersPages`). Dort stehen die Angebote aber immer so aktuell,
+    /// wie die Kette sie veröffentlicht – einen Tipp entfernt.
+    private var retailerOffersSection: some View {
+        let pages = RetailerOffersPages.all.filter {
+            appEnvironment.settings.isEnabled(retailerNamed: $0.name)
+        }
+
+        return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            SectionHeader(title: "Prospekte der Märkte")
+
+            if pages.isEmpty {
+                GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
+                    Text("In den Einstellungen ist keine Kette mit eigener Angebotsseite "
+                         + "eingeschaltet.")
+                        .font(.cardBody)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 150), spacing: Theme.Spacing.s)],
+                    spacing: Theme.Spacing.s
+                ) {
+                    ForEach(pages) { page in
+                        Link(destination: page.url) {
+                            HStack(spacing: Theme.Spacing.xs) {
+                                Text(page.name)
+                                    .font(.cardTitle)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.75)
+                                Spacer(minLength: Theme.Spacing.xs)
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(Theme.accent)
+                            }
+                            .foregroundStyle(Theme.textPrimary)
+                            .padding(.horizontal, Theme.Spacing.m)
+                            .padding(.vertical, 12)
+                            .background(Theme.surface,
+                                        in: RoundedRectangle(cornerRadius: Theme.Radius.chip,
+                                                             style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.Radius.chip, style: .continuous)
+                                    .strokeBorder(Theme.surfaceStroke, lineWidth: 1)
+                            )
+                        }
+                        .accessibilityHint("Öffnet die Angebotsseite von \(page.name) im Browser")
+                    }
+                }
+
+                Text("Die Angebote stehen tagesaktuell auf den Seiten der Märkte. Preisfuchs "
+                     + "liest sie nicht automatisch aus: Keine Kette bietet dafür eine "
+                     + "Schnittstelle an, und mehrere untersagen es.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
 }
 
 /// Schlüssel für das Neuladen der Startseite.
 private struct HomeReloadKey: Equatable {
     let favoriteCount: Int
     let coordinate: Coordinate?
+    let refreshTick: Date
 }
 
 #Preview {
