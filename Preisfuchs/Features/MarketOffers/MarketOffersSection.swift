@@ -44,7 +44,12 @@ struct MarketOffersSection: View {
     private func sourceBlock(_ source: MarketOffersStore.Source) -> some View {
         let status = store.status(of: source)
         let now = Date()
-        let top = Array(status.offers.filter { $0.isValid(on: now) }.prefix(perSource))
+        let current = status.offers.filter { $0.isValid(on: now) }
+        // Sonntags ist die Aktionswoche bei ALDI Nord schon vorbei. Dann die
+        // ersten Angebote ab dem nächsten Aktionstag – die Zeile sagt „ab …“ –
+        // statt einer Kachel „keine Angebote“.
+        let top = Array((current.isEmpty ? status.offers.filter { $0.startsAfter(now) } : current)
+            .prefix(perSource))
 
         if !top.isEmpty {
             ForEach(top) { offer in
@@ -84,7 +89,7 @@ struct MarketOffersSection: View {
 
             case .loaded:
                 GlassCard(padding: Theme.Spacing.l, radius: Theme.Radius.tile) {
-                    Text("\(source.displayName) hat für heute keine gültigen Angebote veröffentlicht.")
+                    Text("\(source.displayName) hat gerade keine Angebote veröffentlicht.")
                         .font(.cardBody)
                         .foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
