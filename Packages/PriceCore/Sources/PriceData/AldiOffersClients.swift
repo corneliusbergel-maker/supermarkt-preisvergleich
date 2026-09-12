@@ -16,6 +16,11 @@ public struct AldiNordOffersClient: Sendable {
     public static let retailerName = "ALDI Nord"
     public static let pageURL = URL(string: "https://www.aldi-nord.de/angebote.html")!
 
+    /// Vorschau auf die nächste Woche. Die Angebotsseite verweist selbst darauf
+    /// (`weekIndicator` → `/angebote-vorschau`). Ohne sie stünde ALDI Nord
+    /// sonntags leer da: Die laufende Woche endet samstags.
+    public static let previewURL = URL(string: "https://www.aldi-nord.de/angebote-vorschau.html")!
+
     private let runner: RequestRunner
 
     public init(transport: HTTPTransport = URLSessionTransport()) {
@@ -23,8 +28,22 @@ public struct AldiNordOffersClient: Sendable {
     }
 
     public func offers() async throws -> [RetailerOffer] {
-        let html = try await OfferFormatting.html(at: Self.pageURL, runner: runner)
-        return try AldiNordOfferParser.parse(html: html, sourceURL: Self.pageURL)
+        var result: [RetailerOffer] = []
+        var firstError: Error?
+
+        for url in [Self.pageURL, Self.previewURL] {
+            do {
+                let html = try await OfferFormatting.html(at: url, runner: runner)
+                result += try AldiNordOfferParser.parse(html: html, sourceURL: url)
+            } catch {
+                // Fehlt eine der beiden Wochen, bleibt die andere sichtbar.
+                if firstError == nil { firstError = error }
+            }
+        }
+
+        if result.isEmpty, let firstError { throw firstError }
+        var seen = Set<String>()
+        return result.filter { seen.insert($0.id).inserted }
     }
 }
 
@@ -106,7 +125,8 @@ enum AldiNordOfferParser {
             ?? key
 
         return RetailerOffer(
-            id: "aldi-nord:\(identifier)",
+            // Mit Aktionsbeginn: Dieselbe Ware kann in zwei Wochen im Angebot sein.
+            id: "aldi-nord:\(identifier)@\(dayKey(validFrom))",
             retailerName: AldiNordOffersClient.retailerName,
             title: brand ?? name,
             subtitle: brand == nil ? nil : name,
@@ -122,6 +142,12 @@ enum AldiNordOfferParser {
             validTo: validTo,
             sourceURL: sourceURL
         )
+    }
+
+    /// Kalendertag als „2026-09-07“.
+    private static func dayKey(_ date: Date) -> String {
+        let parts = RetailerOffer.calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }
 
     /// „Liter“ wird „l“, „kg (ATG)“ wird „kg Abtropfgewicht“.

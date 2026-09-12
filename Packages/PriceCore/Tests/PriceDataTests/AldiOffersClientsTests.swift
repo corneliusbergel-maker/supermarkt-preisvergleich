@@ -22,7 +22,8 @@ final class AldiNordOffersClientTests: XCTestCase {
 
     /// Aktionsblöcke zuerst, Rückrufe und nicht verfügbare Artikel nie.
     func testOrderFollowsThePageAndSkipsRecalls() throws {
-        XCTAssertEqual(try parsed().map(\.id), ["aldi-nord:175", "aldi-nord:TEST.FASSBRAUSE"])
+        XCTAssertEqual(try parsed().map(\.id),
+                       ["aldi-nord:175@2026-09-07", "aldi-nord:TEST.FASSBRAUSE@2026-09-10"])
     }
 
     func testPriceBasePriceAndValidity() throws {
@@ -55,11 +56,25 @@ final class AldiNordOffersClientTests: XCTestCase {
         XCTAssertThrowsError(try AldiNordOfferParser.parse(html: "<html></html>", sourceURL: source))
     }
 
-    func testClientParsesTheDownloadedPage() async throws {
-        let stub = StubTransport([.success(HTTPResponse(status: 200, body: Data(aldiNordFixture.utf8)))])
+    /// Laufende Woche und Vorschau; was in beiden gleich steht, erscheint einmal.
+    func testClientLoadsCurrentWeekAndPreview() async throws {
+        let stub = StubTransport([
+            .success(HTTPResponse(status: 200, body: Data(aldiNordFixture.utf8))),
+            .success(HTTPResponse(status: 200, body: Data(aldiNordFixture.utf8)))
+        ])
         let offers = try await AldiNordOffersClient(transport: stub).offers()
         XCTAssertEqual(offers.count, 2)
-        XCTAssertEqual(stub.log.count, 1)
+        XCTAssertEqual(stub.log.count, 2)
+    }
+
+    /// Fehlt die Vorschau, bleibt die laufende Woche stehen.
+    func testMissingPreviewKeepsCurrentWeek() async throws {
+        let stub = StubTransport([
+            .success(HTTPResponse(status: 200, body: Data(aldiNordFixture.utf8))),
+            .success(.status(404))
+        ])
+        let offers = try await AldiNordOffersClient(transport: stub).offers()
+        XCTAssertEqual(offers.count, 2)
     }
 }
 

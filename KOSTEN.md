@@ -63,10 +63,10 @@ App selbst, sondern Apples Vertriebsweg:
 
 | | ALDI Nord | ALDI SÜD |
 |---|---|---|
-| **Seite** | `aldi-nord.de/angebote.html` | `aldi-sued.de/angebote` und Tagesseiten `/angebote/JJJJ-MM-TT` |
+| **Seite** | `aldi-nord.de/angebote.html` und die Vorschau `/angebote-vorschau.html` | `aldi-sued.de/angebote` und Tagesseiten `/angebote/JJJJ-MM-TT` |
 | **Kosten / Key** | 0 €, kein Key | 0 €, kein Key |
 | **Nutzung** | `robots.txt` erlaubt die Seite; Impressum ohne Nutzungseinschränkung (geprüft 2026-09-12) | `robots.txt` erlaubt Angebots- und Unterseiten (`?page=`); Impressum ohne Einschränkung, Nutzungsbedingungen betreffen nur das Kundenkonto (geprüft 2026-09-12) |
-| **Umfang je Abruf** | 1 Seite, komprimiert rund 100 KB | Übersicht plus je Aktionstag 1–3 Seiten, zusammen bis zu rund 20 Abrufe à ~125 KB |
+| **Umfang je Abruf** | 2 Seiten (laufende und nächste Woche), komprimiert je rund 100 KB | Übersicht plus je Aktionstag 1–3 Seiten, zusammen bis zu rund 20 Abrufe à ~125 KB |
 | **Unsere Maßnahme** | Ehrlicher `User-Agent`, frühestens nach 10 Minuten erneut | Ehrlicher `User-Agent`, höchstens einmal pro Stunde, nur Aktionstage ±7 Tage, höchstens 6 Seiten je Tag |
 
 ### Angebotsseiten der übrigen Märkte — reine Links, 0 €
