@@ -198,7 +198,9 @@ enum KauflandOfferParser {
                 regularPrice: regular,
                 discountPercent: offerPrice == nil ? nil : Self.percent(discount),
                 loyaltyDiscountPercent: cardPrice == nil ? nil : Self.percent(loyaltyDiscount),
-                unit: Self.clean(unit),
+                // Bei Non-Food steht als Einheit oft nur „je“ – ohne Angabe
+                // dahinter ist das keine Information.
+                unit: Self.clean(unit).flatMap { $0.lowercased() == "je" ? nil : $0 },
                 basePriceText: Self.basePrice(Self.clean(formattedBasePrice) ?? Self.clean(basePrice)),
                 validFrom: validFrom,
                 validTo: validTo,
@@ -224,14 +226,15 @@ enum KauflandOfferParser {
             return Int(value.rounded())
         }
 
-        /// „(1 kg = 2.66)“ wird zu „1 kg = 2,66 €“.
+        /// „(1 kg = 2.66)“ wird zu „1 kg = 2,66 €“ – mit geschütztem Leerzeichen
+        /// vor dem Euro, sonst landet das Zeichen allein in der nächsten Zeile.
         private static func basePrice(_ text: String?) -> String? {
             guard var text else { return nil }
             text = text.trimmingCharacters(in: CharacterSet(charactersIn: "()* "))
             text = text.replacingOccurrences(of: "(\\d)\\.(\\d)", with: "$1,$2",
                                              options: .regularExpression)
             guard !text.isEmpty else { return nil }
-            return text.hasSuffix("€") ? text : text + " €"
+            return text.hasSuffix("€") ? text : text + "\u{00A0}€"
         }
     }
 }

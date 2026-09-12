@@ -11,6 +11,7 @@ private let fixture = #"""
 {"offerId":"ART.1183941_KAV.3634320","dateFrom":"2026-09-10","dateTo":"2026-09-16","title":"Südafrik. Mandarinen ","price":1.99,"discount":20,"basePrice":"(1 kg = 2.66)","unit":"je 750-g-Netz","country":"DE","formattedBasePrice":"(1 kg = 2.66)","formattedOldPrice":"2.49","formattedPrice":"1.99"},
 {"offerId":"ART.334791_KAV.3634320","dateFrom":"2026-09-10","dateTo":"2026-09-16","title":"MONTORSI","subtitle":"Pancetta Coppata ","price":2.49,"discount":37,"basePrice":"(1 kg = 24.90)","unit":"je 100-g-Packg.","detailTitle":"*Mit Kaufland Card","loyaltyDiscount":44,"country":"DE","formattedBasePrice":"(1 kg = 24.90)","formattedOldPrice":"3.99","formattedPrice":"2.49","loyaltyFormattedPrice":"2.22*","loyaltyFormattedOldPrice":"3.99"},
 {"offerId":"ART.379961_KAV.3634320","dateFrom":"2026-09-10","dateTo":"2026-09-16","title":"K-CLASSIC","subtitle":"High Protein Pudding ","price":0,"discount":0,"unit":"je 200-g-Becher","detailTitle":"*Mit Kaufland Card","loyaltyDiscount":22,"country":"DE","label":"none","loyaltyFormattedPrice":"0.69*","loyaltyFormattedOldPrice":"0.89"},
+{"offerId":"TEST.EINHEIT-JE","dateFrom":"2026-09-10","dateTo":"2026-09-16","title":"Testmarke","subtitle":"Kochtopf 24 cm","price":19.99,"discount":71,"unit":"je","formattedPrice":"19.99","country":"DE"},
 {"offerId":42,"title":["kaputt"]},
 {"offerId":"TEST.OHNE-PREIS","dateFrom":"2026-09-10","dateTo":"2026-09-16","title":"Ohne Preis","price":0,"discount":0,"country":"DE"},
 {"offerId":"TEST.AUSLAND","dateFrom":"2026-09-10","dateTo":"2026-09-16","title":"Auslandsangebot","price":1.0,"formattedPrice":"1.00","country":"AT"}
@@ -38,8 +39,13 @@ final class KauflandOffersClientTests: XCTestCase {
             "ART.734689_KAV.3634320",
             "ART.1183941_KAV.3634320",
             "ART.334791_KAV.3634320",
-            "ART.379961_KAV.3634320"
+            "ART.379961_KAV.3634320",
+            "TEST.EINHEIT-JE"
         ])
+    }
+
+    func testBareJeIsNoUnit() throws {
+        XCTAssertNil(try offer("TEST.EINHEIT-JE").unit)
     }
 
     func testPricesAndDatesAreReadExactly() throws {
@@ -57,7 +63,7 @@ final class KauflandOffersClientTests: XCTestCase {
     }
 
     func testBasePriceIsWrittenTheGermanWay() throws {
-        XCTAssertEqual(try offer("ART.1183941_KAV.3634320").basePriceText, "1 kg = 2,66 €")
+        XCTAssertEqual(try offer("ART.1183941_KAV.3634320").basePriceText, "1 kg = 2,66\u{00A0}€")
     }
 
     /// Der Kartenpreis darf nie als normaler Angebotspreis erscheinen.
@@ -98,7 +104,7 @@ final class KauflandOffersClientTests: XCTestCase {
     func testClientParsesTheDownloadedPage() async throws {
         let stub = StubTransport([.success(HTTPResponse(status: 200, body: Data(fixture.utf8)))])
         let offers = try await KauflandOffersClient(transport: stub).offers()
-        XCTAssertEqual(offers.count, 4)
+        XCTAssertEqual(offers.count, 5)
         XCTAssertEqual(stub.log.count, 1)
     }
 }

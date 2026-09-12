@@ -47,9 +47,13 @@ final class MarketOffersStore {
         return offers.filter { $0.startsAfter(now) }
     }
 
-    /// Die größten Ersparnisse zuerst.
+    /// Die ersten gültigen Angebote in Kauflands eigener Reihenfolge.
+    ///
+    /// Nicht nach größter Ersparnis: Dann standen Kochtöpfe und Wecker mit
+    /// −70 % oben. Kaufland beginnt mit Obst und Gemüse – das passt zu einer
+    /// Supermarkt-App.
     func topOffers(limit: Int) -> [RetailerOffer] {
-        Array(currentOffers.sorted { $0.bestDiscountPercent > $1.bestDiscountPercent }.prefix(limit))
+        Array(currentOffers.prefix(limit))
     }
 
     func refresh(force: Bool = false) async {
