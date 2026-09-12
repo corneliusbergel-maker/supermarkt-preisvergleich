@@ -2,9 +2,9 @@ import Foundation
 
 /// Offizielle Angebotsseiten der Ketten.
 ///
-/// Nur Links: Preisfuchs liest diese Seiten nicht aus. Keine Kette bietet dafür
-/// eine Schnittstelle an, und mehrere untersagen oder blockieren automatische
-/// Abrufe – Einzelheiten in `DATENQUELLEN-SUPERMAERKTE.md`.
+/// Nur Links. Einzige Ausnahme ist Kaufland, dessen Angebote die App direkt
+/// lädt (`KauflandOffersClient`); die übrigen Ketten untersagen oder blockieren
+/// automatische Abrufe – Einzelheiten in `DATENQUELLEN-SUPERMAERKTE.md`.
 ///
 /// Jede Adresse wurde am 2026-09-12 geprüft; der Kommentar nennt, worauf sie
 /// führte. Ändert eine Kette ihre Adresse, landet der Link schlimmstenfalls

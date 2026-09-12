@@ -2,7 +2,7 @@
 
 > Frage vom 2026-09-12: Kann Preisfuchs die Preise und Angebote von Edeka,
 > Lidl, REWE & Co. direkt bei den Märkten abholen und stündlich aktualisieren,
-> statt über Open Prices?
+> statt nur über Open Prices?
 >
 > Maßstab ist Anforderung #22: *„Nicht einfach Webseiten scrapen, wenn dies
 > gegen deren Nutzungsbedingungen verstößt. Prüfe die technische und
@@ -13,73 +13,90 @@
 
 ---
 
-## Ergebnis in einem Satz
+## Ergebnis
 
-**Keine deutsche Supermarktkette bietet eine offizielle Schnittstelle für
-Preise oder Angebote an. Mehrere untersagen oder blockieren automatische
-Abrufe.** Ein automatischer Abgleich direkt bei den Märkten ist deshalb im
-Rahmen dieses Projekts nicht zulässig umsetzbar – weder stündlich noch
-täglich.
+**Keine deutsche Supermarktkette bietet eine offizielle Schnittstelle an.**
+Geprüft wurde deshalb, ob eine Kette ihre öffentliche Angebotsseite für eine
+App zugänglich lässt. Die Kriterien:
+
+1. `robots.txt` erlaubt die Seite,
+2. die Seite antwortet einer App, die sich ehrlich als Preisfuchs zu erkennen
+   gibt (kein Bot-Schutz, kein Verstellen als Browser),
+3. Nutzungsbedingungen und Impressum verbieten die Nutzung nicht,
+4. die Angebote stehen maschinenlesbar im Quelltext.
+
+**Nur Kaufland erfüllt alle vier Punkte – die Kaufland-Wochenangebote holt die
+App deshalb direkt und stündlich.** Alle anderen Ketten scheiden an mindestens
+einem Punkt aus.
 
 ---
 
 ## Geprüft am 2026-09-12
 
-| Kette | Offizielle API | Beobachtung | Einschätzung |
-|---|---|---|---|
-| **REWE** | keine | `robots.txt` sperrt `/restservices/` (die interne Schnittstelle der Website); die öffentlichen Seiten unter `/angebote/nationale-angebote/…` sind freigegeben. Die Nutzungsbedingungen-Seite blockt automatische Abrufe mit HTTP 403. Laut Drittanbieter Pepesto: „Rewe does not offer a public developer API.“ | Interne API gesperrt; Seiten auslesen hieße HTML-Scraping gegen einen Bot-Schutz. **Nicht umgesetzt.** |
-| **EDEKA** | keine | `robots.txt` und Nutzungsbedingungen antworten automatischen Abrufen mit HTTP 403 (Bot-Schutz). Die Nutzungsbedingungen nennen laut Suchauszug den Schutz vor „missbräuchlicher automatisierter Ausspähung“. Ein inoffizielles „Edeka-API“-Projekt auf GitHub ist nachgebaut, ohne Erlaubnis. | **Nicht umgesetzt.** |
-| **Lidl** | keine | `robots.txt` sperrt `/user-api/` und Such-/ID-Parameter. Registrierung und Login sind per reCAPTCHA gegen Bots geschützt. | **Nicht umgesetzt.** |
-| **Kaufland** | keine | `www.kaufland.de/robots.txt` → HTTP 403. `filiale.kaufland.de/robots.txt` sperrt die Angebots-Detailseiten (`/angebote/aktuell/uebersicht/detail`, `/angebote/naechste-woche/detail`). | Angebotsdetails ausdrücklich gesperrt. **Nicht umgesetzt.** |
-| **ALDI SÜD** | keine | `robots.txt` → HTTP 403 (Bot-Schutz). | **Nicht umgesetzt.** |
-| **ALDI Nord** | keine | `robots.txt` sperrt einzelne Bereiche; keine Schnittstelle. | Nur HTML-Scraping möglich. **Nicht umgesetzt.** |
-| **PENNY** | keine | `robots.txt` erlaubt alles. Die Nutzungsbedingungen der PENNY App verbieten aber gewerbliche Nutzung der Inhalte und den Zugriff „zum Auslesen oder Speichern von Daten“. | **Nicht umgesetzt.** |
-| **Netto Marken-Discount** | keine | `robots.txt` → HTTP 403 (Bot-Schutz). | **Nicht umgesetzt.** |
-| **NORMA** | keine | `robots.txt` sperrt `/ws/` (Webservice). | **Nicht umgesetzt.** |
+| Kette | Ergebnis | Grund |
+|---|---|---|
+| **Kaufland** | ✅ **umgesetzt** | `filiale.kaufland.de/robots.txt` sperrt nur Detailseiten, nicht die Übersicht `/angebote/uebersicht.html`. Die Seite antwortet dem Preisfuchs-`User-Agent` mit HTTP 200. Das Impressum enthält keine Nutzungseinschränkung; die gefundenen „Terms of Use“ betreffen nur das Kundenprogramm Kaufland Card. Die Angebote stehen als strukturierte Daten im Quelltext (Titel, Preis, alter Preis, Rabatt, Einheit, Grundpreis, Gültigkeit, Kartenpreis). |
+| **REWE** | ❌ | Die Nutzungsbedingungen-Seite antwortet automatischen Abrufen mit einer „WAF Challenge Bot protection“. `robots.txt` sperrt die interne Schnittstelle `/restservices/`. |
+| **EDEKA** | ❌ | Das Impressum erlaubt, Text zu speichern und zu vervielfältigen, verbietet es aber für Bilder. Die Angebote lädt die Seite erst nachträglich über eine eigene Schnittstelle je Markt; `robots.txt` und Nutzungsbedingungen sind per Bot-Schutz gesperrt (HTTP 403), sodass die Erlaubnis nicht prüfbar ist. |
+| **Lidl** | ❌ | Die Angebote gibt es als Prospekt (Bilder), nicht als Einzelpreise. `robots.txt` sperrt `/user-api/` und Such-/ID-Parameter. |
+| **ALDI SÜD** | ❌ | `robots.txt` per Bot-Schutz gesperrt (HTTP 403); die „Nutzungsbedingungen“ gelten nur für das Kundenkonto. Erlaubnis nicht prüfbar. |
+| **ALDI Nord** | ❌ | Preise stehen nicht im Quelltext, sondern werden per JavaScript nachgeladen. |
+| **PENNY** | ❌ | Preise werden per JavaScript nachgeladen. Die Nutzungsbedingungen der PENNY App verbieten den Zugriff „zum Auslesen oder Speichern von Daten“. |
+| **Netto Marken-Discount** | ❌ | Die Angebotsseite antwortet dem Preisfuchs-`User-Agent` mit HTTP 403. |
+| **NORMA** | ❌ | Impressum: *„Eine Verwendung von Teilen der Website bedarf einer ausdrücklichen Zustimmung“*. |
 
 ### Was es sonst gibt – und warum es nicht passt
 
 | Weg | Warum nicht |
 |---|---|
 | **Kommerzielle Datenanbieter** (z. B. Pepesto) | Kostenpflichtig (widerspricht #51) und nach eigener Aussage selbst aus öffentlichen Shopseiten gewonnen, nicht lizenziert. |
-| **Undokumentierte App-Schnittstellen** (per Reverse Engineering) | Nicht freigegeben, teils gegen Nutzungsbedingungen, können jederzeit abgeschaltet werden. |
-| **Stündlicher Abruf über GitHub Actions** | GitHub erlaubt Actions nur für Bau, Test und Veröffentlichung des Projekts – nicht als Dauerbetrieb eines Datensammlers. Das Problem der Nutzungsbedingungen der Märkte bliebe ohnehin. |
-| **„Heisse Preise“** | Open-Source-Vorbild, erfasst laut README aber nur österreichische Ketten. |
+| **Undokumentierte App-Schnittstellen** | Nicht freigegeben, teils per Bot-Schutz gesichert – das zu umgehen kommt nicht in Frage. |
+| **Stündlicher Sammel-Server über GitHub Actions** | GitHub erlaubt auf seinen Runnern nur Tätigkeiten für Bau, Test, Bereitstellung und Veröffentlichung des Projekts. Die App lädt deshalb selbst, auf dem Gerät. |
 
 ---
 
-## Was stattdessen umgesetzt ist
+## So ist Kaufland eingebunden
 
-1. **Prospekte der Märkte (Startseite):** Für jede eingeschaltete Kette ein Link
-   auf ihre offizielle Angebotsseite. Alle neun Adressen wurden am 2026-09-12
-   im Browser geöffnet (siehe `Preisfuchs/Services/RetailerOffersPages.swift`).
-   Die Angebote sind damit einen Tipp entfernt und immer so aktuell, wie die
-   Kette sie veröffentlicht – ohne dass Preisfuchs etwas ausliest.
-2. **Stündliche Aktualisierung:** Startseite (Favoriten, Deals) und Favoriten
-   laden stündlich neu, solange die App offen ist, und beim Zurückkehren in die
-   App, wenn der letzte Stand älter als eine Stunde ist. Die Hintergrundprüfung
-   der Preisalarme wünscht sich ebenfalls einen Stundentakt; wann sie wirklich
-   läuft, entscheidet iOS.
-3. **Aktionspreise aus Open Prices** stehen weiter unter „Deine besten Deals“ –
-   mit Beleg, ohne Erfindungen.
+- **Wo:** `Packages/PriceCore/Sources/PriceData/KauflandOffersClient.swift`,
+  angezeigt über `Preisfuchs/Features/MarketOffers/`.
+- **Wann:** Beim Öffnen der Startseite und danach stündlich, solange die App
+  offen ist; beim Zurückkehren, wenn der Stand älter als eine Stunde ist; beim
+  Herunterziehen. Nie öfter als alle 10 Minuten.
+- **Was:** Titel, Preis, alter Preis, Rabatt, Einheit, Grundpreis,
+  Gültigkeitszeitraum. Kaufland-Card-Preise werden **getrennt** gekennzeichnet
+  („Mit Kaufland Card …“, „nur mit Kaufland Card“) und nie als normaler Preis
+  ausgegeben.
+- **Was nicht:** Keine Produktbilder aus dem Prospekt (Rechte bei Kaufland).
+  Keine Verknüpfung mit Produkten aus Open Food Facts – die Angebote tragen
+  keinen Barcode, eine Zuordnung über den Namen wäre geraten.
+- **Ehrlichkeit:** Die Seite zeigt die Standardauswahl von kaufland.de ohne
+  gewählte Filiale. Die App sagt dazu, dass einzelne Märkte abweichen können,
+  und nennt Quelle und Abrufzeit.
+- **Datenschutz:** An Kaufland geht nur ein gewöhnlicher Seitenabruf mit
+  Preisfuchs-Kennung – kein Standort, keine Kennung des Nutzers.
+- **Wenn Kaufland die Seite ändert:** Der Parser meldet einen Fehler statt
+  einer leeren Liste; ein Test sichert das ab.
 
-## Was es für echte Händlerpreise bräuchte
+## Die übrigen Ketten
 
-- **Eine Vereinbarung mit den Ketten** (Datenlizenz oder Partnerprogramm). Das
-  ist der einzige saubere Weg zu vollständigen, aktuellen Preisen – und in der
-  Regel nicht kostenlos.
-- **Mehr Beiträge zu Open Prices:** Jeder Preis, der in der App über „Preis
-  beitragen“ mit Foto eingetragen wird, steht danach allen zur Verfügung.
+Für REWE, EDEKA, Lidl, ALDI SÜD, ALDI Nord, PENNY, Netto und NORMA verlinkt die
+Startseite unter „Prospekte der Märkte“ die offizielle Angebotsseite. Die
+Angebote sind dort einen Tipp entfernt und immer so aktuell, wie die Kette sie
+veröffentlicht.
+
+Für echte, vollständige Händlerpreise bräuchte es eine **Vereinbarung mit den
+Ketten** (Datenlizenz) – in der Regel nicht kostenlos. Kostenlos wächst der
+Datenbestand über **Open Prices**: Jeder Preis, der in der App über „Preis
+beitragen“ eingetragen wird, steht danach allen zur Verfügung.
 
 ## Quellen
 
-- REWE `robots.txt`, Lidl `robots.txt`, ALDI Nord `robots.txt`,
-  PENNY `robots.txt`, NORMA `robots.txt`, `filiale.kaufland.de/robots.txt` –
-  abgerufen 2026-09-12
-- [Pepesto – Rewe API](https://www.pepesto.com/supermarkets/rewe/)
+- `robots.txt` von REWE, Lidl, ALDI Nord, PENNY, NORMA und
+  `filiale.kaufland.de`; Impressum von Kaufland, EDEKA, Lidl, PENNY, NORMA;
+  Angebotsseiten aller neun Ketten – abgerufen 2026-09-12
 - [PENNY App – Nutzungsbedingungen](https://www.penny.de/penny-app-nutzungsbedingungen)
-- [EDEKA – Nutzungsbedingungen](https://www.edeka.de/services/nutzungsbedingungen/)
-- [Lidl – Datenschutz (reCAPTCHA)](https://www.lidl.de/c/datenschutz/s10007528)
-- [VinceDerPrince/Edeka-API](https://github.com/VinceDerPrince/Edeka-API)
-- [badlogic/heissepreise](https://github.com/badlogic/heissepreise)
-- [GitHub – Zusatzbedingungen für Actions](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features#actions)
+- [NORMA – Impressum](https://www.norma-online.de/de/impressum)
+- [EDEKA – Impressum](https://www.edeka.de/impressum/)
+- [Kaufland – Terms of Use (Kaufland Card)](https://content.kaufland.com/de/de/ssc12/terms_of_use.html)
+- [Pepesto – Rewe API](https://www.pepesto.com/supermarkets/rewe/)
+- [GitHub – Zusatzbedingungen (Actions)](https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features)

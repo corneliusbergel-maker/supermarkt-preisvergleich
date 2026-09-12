@@ -47,6 +47,7 @@ enum LaunchOptions {
         guard let raw = value(for: "-uiRoute") else { return nil }
         switch raw.lowercased() {
         case "stores", "filialen": return .stores
+        case "offers", "angebote": return .marketOffers
         default: return nil
         }
     }

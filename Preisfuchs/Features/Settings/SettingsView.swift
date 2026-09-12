@@ -187,12 +187,16 @@ struct SettingsView: View {
             attributionRow(source: "© OpenStreetMap-Mitwirkende",
                            purpose: "Filialen, Adressen, Öffnungszeiten",
                            license: "ODbL")
+            attributionRow(source: "Kaufland",
+                           purpose: "Wochenangebote von der öffentlichen Angebotsseite",
+                           license: "© Kaufland")
         } header: {
             Text("Datenquellen")
         } footer: {
-            Text("Preisfuchs nutzt ausschließlich offene Datenquellen. Es werden keine "
-                 + "Händler-Websites ausgelesen und keine kostenpflichtigen Preisdienste "
-                 + "verwendet.")
+            Text("Preise und Produkte kommen aus offenen Datenquellen. Einzige "
+                 + "Händler-Website ist die Angebotsseite von Kaufland – die übrigen "
+                 + "Ketten untersagen oder blockieren das Auslesen. Es werden keine "
+                 + "kostenpflichtigen Preisdienste verwendet.")
         }
         .listRowBackground(Theme.surface)
     }

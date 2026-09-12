@@ -48,12 +48,23 @@ App selbst, sondern Apples Vertriebsweg:
 | **Kostenrisiko** | Sehr gering, siehe oben. |
 | **Unsere Maßnahme** | Ergebnisse cachen, `size` begrenzen. Aktualisiert wird höchstens stündlich und nur Startseite und Favoriten, solange die App offen ist (seit 2026-09-12). |
 
-### Angebotsseiten der Märkte — reine Links, 0 €
+### Kaufland-Wochenangebote — 0 €
+
+| | |
+|---|---|
+| **Kosten** | 0 € — öffentliche Angebotsseite `filiale.kaufland.de/angebote/uebersicht.html` |
+| **API-Key** | nicht erforderlich |
+| **Nutzung** | `robots.txt` erlaubt die Übersicht; Impressum und Website schränken die Nutzung nicht ein (geprüft 2026-09-12). Keine Bilder, nur Titel, Preise und Gültigkeit, mit Quellenangabe. |
+| **Limits** | Keine veröffentlicht. Die Seite ist komprimiert rund 500 KB groß. |
+| **Unsere Maßnahme** | Ehrlicher `User-Agent`, höchstens stündlich und nur bei geöffneter App, frühestens nach 10 Minuten erneut, zwei Versuche. Kein Standort wird mitgeschickt. |
+| **Risiko** | Kaufland kann die Seite jederzeit ändern oder sperren. Dann zeigt die App einen Fehler statt veralteter Angebote. |
+
+### Angebotsseiten der übrigen Märkte — reine Links, 0 €
 
 Die Startseite verlinkt die offiziellen Angebotsseiten von REWE, EDEKA,
-Kaufland, Lidl, ALDI SÜD, ALDI Nord, PENNY, Netto Marken-Discount und NORMA.
-Es wird **nichts ausgelesen** — keine Kette bietet eine Schnittstelle, und
-mehrere untersagen automatische Abrufe. Begründung und Belege:
+Lidl, ALDI SÜD, ALDI Nord, PENNY, Netto Marken-Discount und NORMA. Dort wird
+**nichts ausgelesen** — diese Ketten untersagen oder blockieren automatische
+Abrufe. Begründung und Belege:
 [DATENQUELLEN-SUPERMAERKTE.md](DATENQUELLEN-SUPERMAERKTE.md).
 
 ### Preise beitragen — ebenfalls 0 €

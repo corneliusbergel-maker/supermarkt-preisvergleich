@@ -24,6 +24,9 @@ final class AppEnvironment {
     let prices: OpenPricesClient
     let stores: OverpassClient
 
+    /// Wochenangebote direkt von der Kette (Kaufland).
+    let marketOffers: MarketOffersStore
+
     /// Zeitpunkt der zuletzt angestoßenen Aktualisierung. Startseite und
     /// Favoriten hängen ihr Neuladen daran.
     private(set) var refreshTick = Date()
@@ -69,6 +72,10 @@ final class AppEnvironment {
 
         self.products = products ?? OpenFoodFactsClient(transport: transport)
         self.prices = prices ?? OpenPricesClient(transport: transport)
+
+        // Über denselben Transport: Ohne Netz zeigt die Liste den letzten Stand
+        // und das Banner sagt, von wann er ist.
+        self.marketOffers = MarketOffersStore(client: KauflandOffersClient(transport: transport))
 
         // Overpass bleibt beim einfachen Transport: Es fragt per POST ab, und
         // POST wird bewusst nicht auf Platte gelegt. Die Filialen haben

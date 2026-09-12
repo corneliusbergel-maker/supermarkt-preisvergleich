@@ -3,6 +3,7 @@ import SwiftUI
 /// Ziele, die kein eigener Hauptbereich sind, aber angesteuert werden koennen.
 enum AppRoute: Hashable {
     case stores
+    case marketOffers
 }
 
 /// Die fuenf Hauptbereiche der App.
@@ -80,8 +81,8 @@ struct RootView: View {
         // Für Bildschirmfotos in der CI. Ohne Startparameter passiert nichts;
         // Produkt und Preise kommen aus den echten APIs.
         .task {
-            if LaunchOptions.initialRoute == .stores {
-                path.append(AppRoute.stores)
+            if let route = LaunchOptions.initialRoute {
+                path.append(route)
             }
             guard let barcode = LaunchOptions.initialBarcode else { return }
             // Open Food Facts antwortet unter Last gelegentlich nicht. Ein

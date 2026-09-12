@@ -40,6 +40,11 @@ struct HomeView: View {
                 quickActions
                 favoritesSection
                 dealsSection
+                if appEnvironment.settings.isEnabled(retailerNamed: MarketOffersStore.retailerName) {
+                    MarketOffersSection {
+                        path.append(AppRoute.marketOffers)
+                    }
+                }
                 retailerOffersSection
             }
             .padding(.horizontal, isWide ? Theme.Spacing.xl : Theme.Spacing.l)
@@ -57,6 +62,7 @@ struct HomeView: View {
         .navigationDestination(for: AppRoute.self) { route in
             switch route {
             case .stores: StoresView()
+            case .marketOffers: MarketOffersView()
             }
         }
         .sheet(isPresented: $isScanning) {
@@ -347,9 +353,9 @@ struct HomeView: View {
                     }
                 }
 
-                Text("Die Angebote stehen tagesaktuell auf den Seiten der Märkte. Preisfuchs "
-                     + "liest sie nicht automatisch aus: Keine Kette bietet dafür eine "
-                     + "Schnittstelle an, und mehrere untersagen es.")
+                Text("Die Angebote stehen tagesaktuell auf den Seiten der Märkte. Die von "
+                     + "Kaufland holt Preisfuchs direkt in die App; die übrigen Ketten "
+                     + "untersagen oder blockieren das Auslesen ihrer Seiten.")
                     .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)

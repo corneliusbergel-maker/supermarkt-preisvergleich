@@ -309,6 +309,8 @@ jobs:
           shot 06-Favoriten 8 -uiTab favorites
           shot 07-Liste 8 -uiTab list
           shot 08-Einstellungen 8 -uiTab settings
+          # Wochenangebote direkt von kaufland.de (echte Seite, echte Preise).
+          shot 09-Kaufland-Angebote 20 -uiRoute angebote
 
           ls -la screenshots
 
