@@ -13,6 +13,7 @@ und wo nicht — steht in [ARCHITEKTUR.md](ARCHITEKTUR.md), Abschnitt 4.4.
 | Dokument | Inhalt |
 |---|---|
 | [ARCHITEKTUR.md](ARCHITEKTUR.md) | Technische Analyse, geprüfte Datenquellen, Feature-Matrix, Roadmap |
+| [DATENQUELLEN-SUPERMAERKTE.md](DATENQUELLEN-SUPERMAERKTE.md) | Warum Preise nicht direkt bei REWE, Lidl & Co. abgeholt werden – Prüfung je Kette mit Belegen |
 | [KOSTEN.md](KOSTEN.md) | Kosten & Limits **jeder** Abhängigkeit (Kurzfassung: 0 €) |
 | **[AUF-DEM-IPHONE.md](AUF-DEM-IPHONE.md)** | **Ohne Mac aufs eigene iPhone — kostenlos, in drei Schritten** |
 | [INSTALLATION.md](INSTALLATION.md) | Xcode öffnen, Signing, App-Store-Schritte |
