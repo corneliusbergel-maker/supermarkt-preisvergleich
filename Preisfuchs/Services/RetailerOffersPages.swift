@@ -14,6 +14,8 @@ enum RetailerOffersPages {
     struct Page: Identifiable, Hashable {
         /// Name wie in der Auswahlliste der Einstellungen.
         let name: String
+        /// Kürzere Beschriftung, falls der volle Name nicht in die Kachel passt.
+        var shortName: String?
         let url: URL
         var id: String { name }
     }
@@ -34,13 +36,13 @@ enum RetailerOffersPages {
         // Seitentitel „Angebote & Prospekt der Woche | PENNY.de“
         page("Penny", "https://www.penny.de/angebote"),
         // Seitentitel „Aktuelle Filial-Angebote & Prospekte | Netto Marken-Discount“
-        page("Netto Marken-Discount", "https://www.netto-online.de/filialangebote"),
+        page("Netto Marken-Discount", "https://www.netto-online.de/filialangebote", short: "Netto"),
         // Seitentitel „NORMA - Ihr Lebensmittel-Discounter | Angebote“
         page("Norma", "https://www.norma-online.de/de/angebote/")
     ]
 
-    private static func page(_ name: String, _ address: String) -> Page {
+    private static func page(_ name: String, _ address: String, short: String? = nil) -> Page {
         // Feste, geprüfte Adressen – ein Tippfehler fiele beim ersten Start auf.
-        Page(name: name, url: URL(string: address)!)
+        Page(name: name, shortName: short, url: URL(string: address)!)
     }
 }

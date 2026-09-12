@@ -318,10 +318,15 @@ struct HomeView: View {
                     ForEach(pages) { page in
                         Link(destination: page.url) {
                             HStack(spacing: Theme.Spacing.xs) {
-                                Text(page.name)
-                                    .font(.cardTitle)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.75)
+                                // Passt der volle Name nicht, steht die kurze Form
+                                // da. „Netto Marken-…“ las sich wie ein Fehler.
+                                ViewThatFits(in: .horizontal) {
+                                    Text(page.name)
+                                    Text(page.shortName ?? page.name)
+                                }
+                                .font(.cardTitle)
+                                .lineLimit(1)
+                                .accessibilityLabel(page.name)
                                 Spacer(minLength: Theme.Spacing.xs)
                                 Image(systemName: "arrow.up.right")
                                     .font(.system(size: 12, weight: .semibold))
