@@ -31,6 +31,8 @@ struct ContributePriceSheet: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
     @State private var isTakingPhoto = false
+    @State private var isReadingPrice = false
+    @State private var priceWasRead = false
 
     @State private var priceText = ""
     @State private var isDiscounted = false
@@ -163,6 +165,12 @@ struct ContributePriceSheet: View {
             submitSection
             accountSection
         }
+        // Liest den Preis vom Foto vor, sobald eines da ist. Übertragen wird
+        // er erst, wenn man selbst auf „Preis beitragen“ tippt.
+        .onChange(of: photoData) { _, data in
+            guard let data else { return }
+            Task { await readPrice(from: data) }
+        }
     }
 
     private var productSection: some View {
@@ -276,10 +284,17 @@ struct ContributePriceSheet: View {
         } header: {
             Text("Preis")
         } footer: {
-            if isDiscounted {
-                Text("Den Normalpreis nur eintragen, wenn er auf dem Schild steht. "
-                     + "Ein geschätzter Wert stünde sonst als Tatsache in einer "
-                     + "öffentlichen Datenbank.")
+            VStack(alignment: .leading, spacing: 6) {
+                if isReadingPrice {
+                    Text("Preis wird aus dem Foto gelesen …")
+                } else if priceWasRead {
+                    Text("Aus dem Foto erkannt – bitte mit dem Schild vergleichen.")
+                }
+                if isDiscounted {
+                    Text("Den Normalpreis nur eintragen, wenn er auf dem Schild steht. "
+                         + "Ein geschätzter Wert stünde sonst als Tatsache in einer "
+                         + "öffentlichen Datenbank.")
+                }
             }
         }
         .listRowBackground(Theme.surface)
@@ -350,6 +365,29 @@ struct ContributePriceSheet: View {
         isLoadingStores = true
         defer { isLoadingStores = false }
         stores = (try? await appEnvironment.stores.stores(near: coordinate, radiusKm: 5)) ?? []
+    }
+
+    /// Schlägt den Preis vom Foto vor. Ein schon getippter Preis wird nicht
+    /// überschrieben – wer vor dem Regal steht, hat recht.
+    private func readPrice(from data: Data) async {
+        isReadingPrice = true
+        defer { isReadingPrice = false }
+
+        guard let amount = await PriceTagReader.readPrice(from: data),
+              priceText.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return
+        }
+        priceText = Self.germanAmount(amount)
+        priceWasRead = true
+    }
+
+    private static func germanAmount(_ value: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "de_DE")
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSDecimalNumber(decimal: value)) ?? "\(value)"
     }
 
     private func loadPhoto(_ item: PhotosPickerItem?) async {

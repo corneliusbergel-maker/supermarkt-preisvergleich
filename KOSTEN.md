@@ -124,6 +124,7 @@ kosten.
 | CoreLocation | Standort, Entfernung | 0 € |
 | VisionKit | Barcode-Scanner (`DataScannerViewController`) | 0 € |
 | Vision | Produktfotos freistellen (`VNGenerateForegroundInstanceMaskRequest`), vollständig auf dem Gerät | 0 € |
+| Vision | Preis vom Foto eines Preisschilds lesen (`VNRecognizeTextRequest`), vollständig auf dem Gerät – nur als Vorschlag im Formular | 0 € |
 | Swift Charts | Preisverlauf-Diagramm | 0 € |
 | UserNotifications | lokale Benachrichtigungen | 0 € |
 | BackgroundTasks | `BGAppRefreshTask` für Preisprüfung | 0 € |
