@@ -50,6 +50,14 @@ struct ProductDetailView: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                 header
                 actionRow
+                // Zuerst der Überblick über alle Ketten, darunter die Einzelheiten
+                // der belegten Preise aus Open Prices.
+                if !model.chainPrices.isEmpty {
+                    ChainPriceSection(rows: model.chainPrices,
+                                      canContribute: model.displayProduct.barcode != nil,
+                                      onRoute: { routeTarget = $0 },
+                                      onContribute: { isContributing = true })
+                }
                 priceSection
             }
             .padding(.horizontal, isWide ? Theme.Spacing.xl : Theme.Spacing.l)
@@ -254,7 +262,7 @@ struct ProductDetailView: View {
         }
 
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            SectionHeader(title: "Alle Preise (\(offers.count))")
+            SectionHeader(title: "Belegte Preise (\(offers.count))")
             ForEach(offers) { offer in
                 OfferRow(offer: offer) { store in
                     routeTarget = store
@@ -270,7 +278,7 @@ struct ProductDetailView: View {
         GlassCard {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 HStack {
-                    Text("Günstigster Preis")
+                    Text("Günstigster belegter Preis")
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
                     Spacer()

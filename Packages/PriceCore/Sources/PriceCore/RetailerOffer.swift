@@ -4,9 +4,9 @@ import Foundation
 /// Wochenprospekt.
 ///
 /// Anders als `PriceObservation` hängt es an keinem Barcode: Die Ketten nennen
-/// nur einen Titel („Südafrik. Mandarinen“). Es wird deshalb nie mit Produkten
-/// aus Open Food Facts zusammengeführt – eine Zuordnung über den Namen wäre
-/// geraten, und ein falsch zugeordneter Preis ist schlimmer als keiner.
+/// nur Marke, Artikel und Packung („BARILLA“, „Pesto“, „je 190-g-Glas“). Einem
+/// Produkt aus Open Food Facts wird es nur über `OfferMatcher` zugeordnet –
+/// streng, denn ein falsch zugeordneter Preis ist schlimmer als keiner.
 public struct RetailerOffer: Hashable, Sendable, Identifiable {
 
     public let id: String

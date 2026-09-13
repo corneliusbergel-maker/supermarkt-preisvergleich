@@ -73,10 +73,15 @@ Preisfuchs-Kennung antworteten EDEKA, ALDI SÜD und ALDI Nord normal.
 - **Was:** Titel, Marke, Preis, Vergleichspreis (mit Bezeichnung wie „UVP“),
   Rabatt, Einheit, Grundpreis, Pfand, Gültigkeit. Kaufland-Card-Preise werden
   **getrennt** gekennzeichnet und nie als normaler Preis ausgegeben.
+- **Zuordnung zu Produkten:** Die Angebote tragen keinen Barcode. Auf der
+  Produktseite erscheint ein Angebot deshalb nur, wenn `OfferMatcher` (in
+  `PriceCore`) **alle** Punkte bestätigt: gleiche Marke, gleicher Artikelname
+  (oder „versch. Sorten“ mit passendem Namen), kein widersprechendes
+  Sortenwort, Produktmenge innerhalb der Packungsangabe. Im Zweifel keine
+  Zuordnung. Die Zeile nennt Quelle und Gültigkeit und sagt dazu, wenn das
+  Angebot nur über „versch. Sorten“ passt.
 - **Was nicht:** Keine Produktbilder aus den Prospekten (Rechte bei den
-  Ketten). Keine Verknüpfung mit Produkten aus Open Food Facts – die Angebote
-  tragen keinen Barcode, eine Zuordnung über den Namen wäre geraten. Kein
-  erfundenes Enddatum bei ALDI SÜD.
+  Ketten). Kein erfundenes Enddatum bei ALDI SÜD.
 - **Ehrlichkeit:** Alle drei Seiten zeigen eine Standardauswahl ohne gewählte
   Filiale. Die App sagt dazu, dass einzelne Märkte abweichen können, und nennt
   Quelle und Abrufzeit je Kette.
@@ -86,10 +91,31 @@ Preisfuchs-Kennung antworteten EDEKA, ALDI SÜD und ALDI Nord normal.
   einer leeren Liste; Tests sichern das ab. Fällt eine Kette aus, bleiben die
   anderen sichtbar.
 
-## Die übrigen Ketten
+## Die übrigen Ketten – und was die App stattdessen zeigt
 
-Für REWE, EDEKA, Lidl, PENNY, Netto und NORMA verlinkt die Startseite unter
-„Prospekte der Märkte“ die offizielle Angebotsseite.
+Für REWE, EDEKA, Lidl, PENNY, Netto und NORMA gibt es keinen erlaubten
+automatischen Abruf. Die Produktseite zeigt sie trotzdem, im Bereich
+**„Preise nach Supermarkt“** – jede eingeschaltete Kette in einer Zeile:
+
+1. **Angebot direkt von der Kette** (Kaufland, ALDI Nord, ALDI SÜD), wenn eines
+   streng zum Produkt passt;
+2. sonst der **günstigste aktuelle Preis aus Open Prices** für diese Kette –
+   aus der Umgebung oder aus ganz Deutschland, mit Ort und Alter;
+3. sonst ein älterer Preis, als „möglicherweise veraltet“ gekennzeichnet;
+4. sonst „Noch kein Preis bekannt“ und der Link zum offiziellen Prospekt.
+
+Dazu die **nächste Filiale** der Kette (OpenStreetMap) mit Entfernung und
+Route. Oben steht der **günstigste Supermarkt** unter allen aktuellen Preisen.
+Wer im Markt einen Preis sieht, trägt ihn über „Preis beitragen“ ein – danach
+steht er allen zur Verfügung.
+
+Die Startseite verlinkt die offiziellen Angebotsseiten zusätzlich unter
+„Prospekte der Märkte“.
+
+Nicht eingebunden, obwohl technisch auffindbar: Lidls Prospekt-Viewer lädt
+Produktdaten über `endpoints.leaflets.schwarz`, EDEKAs Website Angebote je
+Markt über `/api/offers`. Beides sind interne Schnittstellen der Seiten, nicht
+für andere Apps veröffentlicht; eine Freigabe liegt nicht vor.
 
 Für vollständige, filialgenaue Händlerpreise bräuchte es eine **Vereinbarung
 mit den Ketten** (Datenlizenz) – in der Regel nicht kostenlos. Kostenlos wächst
