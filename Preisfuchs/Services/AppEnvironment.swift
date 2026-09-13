@@ -24,7 +24,7 @@ final class AppEnvironment {
     let prices: OpenPricesClient
     let stores: OverpassClient
 
-    /// Angebote direkt von den Ketten (Kaufland, ALDI Nord, ALDI SÜD).
+    /// Angebote direkt von den Ketten (Kaufland, ALDI Nord, ALDI SÜD, Lidl).
     let marketOffers: MarketOffersStore
 
     /// Zeitpunkt der zuletzt angestoßenen Aktualisierung. Startseite und

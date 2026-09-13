@@ -69,12 +69,24 @@ App selbst, sondern Apples Vertriebsweg:
 | **Umfang je Abruf** | 2 Seiten (laufende und nächste Woche), komprimiert je rund 100 KB | Übersicht plus je Aktionstag 1–3 Seiten, zusammen bis zu rund 20 Abrufe à ~125 KB |
 | **Unsere Maßnahme** | Ehrlicher `User-Agent`, frühestens nach 10 Minuten erneut | Ehrlicher `User-Agent`, höchstens einmal pro Stunde, nur Aktionstage ±7 Tage, höchstens 6 Seiten je Tag |
 
+### Lidl-Prospekt — 0 €
+
+| | |
+|---|---|
+| **Seiten** | Übersicht `lidl.de/c/online-prospekte/s10005610`, daraus die Aktionsprospekte über `endpoints.leaflets.schwarz/v4/flyer?flyer_identifier=…` |
+| **Kosten / Key** | 0 €, kein Key |
+| **Nutzung** | `lidl.de/robots.txt` erlaubt die Übersicht; `endpoints.leaflets.schwarz` hat keine `robots.txt`; Impressum (`/c/impressum/s10005238`) ohne Nutzungseinschränkung (geprüft 2026-09-13) |
+| **Inhalt** | Nur Getränke (Wein, Bier, Spirituosen) und Non-Food — Lebensmittel stehen bei Lidl nur als Bild im Prospekt |
+| **Umfang je Abruf** | 1 Übersichtsseite plus höchstens 3 Prospekte à rund 400–450 KB |
+| **Unsere Maßnahme** | Ehrlicher `User-Agent`, höchstens einmal pro Stunde, keine Regions- oder Filialangabe, kein Standort |
+
 ### Angebotsseiten der übrigen Märkte — reine Links, 0 €
 
 Die Startseite verlinkt die offiziellen Angebotsseiten von REWE, EDEKA,
-Lidl, PENNY, Netto Marken-Discount und NORMA. Dort wird **nichts
-ausgelesen** — diese Ketten erlauben es nicht oder geben ihre Angebote nur
-nach Marktauswahl heraus. Begründung und Belege:
+Lidl, PENNY, Netto Marken-Discount und NORMA. Bei REWE, EDEKA, PENNY, Netto
+und NORMA wird **nichts ausgelesen** — diese Ketten erlauben es nicht oder
+geben ihre Angebote nur nach Marktauswahl heraus; bei Lidl bleiben die
+Lebensmittel dem Prospekt vorbehalten. Begründung und Belege:
 [DATENQUELLEN-SUPERMAERKTE.md](DATENQUELLEN-SUPERMAERKTE.md).
 
 ### Preise beitragen — ebenfalls 0 €

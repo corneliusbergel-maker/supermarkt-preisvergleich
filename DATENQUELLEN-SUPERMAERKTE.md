@@ -25,9 +25,10 @@ App zugänglich lässt. Die Kriterien:
 3. Nutzungsbedingungen und Impressum verbieten die Nutzung nicht,
 4. die Angebote stehen maschinenlesbar im Quelltext der Seite.
 
-**Kaufland, ALDI Nord und ALDI SÜD erfüllen alle vier Punkte – ihre Angebote
-holt die App direkt und stündlich.** Die übrigen Ketten scheiden an mindestens
-einem Punkt aus.
+**Kaufland, ALDI Nord, ALDI SÜD und Lidl erfüllen alle vier Punkte – ihre
+Angebote holt die App direkt und stündlich.** Bei Lidl gilt das nur für die
+Artikel, die der Prospekt strukturiert liefert: Getränke und Non-Food. Die
+übrigen Ketten scheiden an mindestens einem Punkt aus.
 
 Wichtige Beobachtung: Mehrere Seiten, die zunächst mit HTTP 403 antworteten,
 taten das nur, weil der Abruf sich als Browser ausgab. Mit der ehrlichen
@@ -43,9 +44,9 @@ Preisfuchs-Kennung antworteten EDEKA, ALDI SÜD und ALDI Nord normal.
 | **ALDI Nord** | ✅ **umgesetzt** | `robots.txt` sperrt nur einzelne Bereiche, nicht die Angebote. Seite antwortet mit HTTP 200. Impressum (`/kundeninformationen/impressum.html`) ohne Klausel zu Urheberrecht, Vervielfältigung oder automatischem Zugriff. Die 253 Angebote der Woche stehen als JSON in der Seite (Name, Marke, Preis, Grundpreis, Gültigkeit von–bis, Pfand, UVP). Die Seite verweist selbst auf die Vorschau `/angebote-vorschau.html` (282 Angebote der nächsten Woche, gleiches Format) – die lädt die App mit, sonst stünde ALDI Nord sonntags leer da. |
 | **ALDI SÜD** | ✅ **umgesetzt** | `robots.txt` sperrt nur `/tools` und Suchanfragen, erlaubt Seitenzahlen (`?page=`) ausdrücklich. Seite antwortet mit HTTP 200. Impressum ohne Einschränkung; die Nutzungsbedingungen gelten für das Kundenkonto. Angebote je Aktionstag (`/angebote/2026-09-11`) im Nuxt-Format der Seite. ALDI SÜD nennt nur „verfügbar seit“, kein Enddatum – die App zeigt es genau so. |
 | **REWE** | ❌ | Die Nutzungsbedingungen lassen sich nur nach einer Menschen-Prüfung („Zeig uns, dass du ein Mensch bist“) lesen – die wird nicht umgangen. Die Angebotsseite liefert ohne gewählten Markt nur 10 Angebote; der Rest kommt erst nach Marktauswahl. |
-| **EDEKA** | ❌ | `robots.txt` erlaubt die Angebote, das Impressum erlaubt ausdrücklich, Text zu speichern und zu vervielfältigen (nicht Bilder), die Nutzungsbedingungen betreffen App, PAYBACK und Bezahlen. **Aber:** Die Angebotsseite enthält keine Angebotsdaten; sie kommen über eine Live-Verbindung je Markt. Die nachzubauen wäre Reverse Engineering und bräche bei jeder Änderung. |
+| **EDEKA** | ❌ | `robots.txt` erlaubt die Angebote, das Impressum erlaubt ausdrücklich, Text zu speichern und zu vervielfältigen (nicht Bilder). Die Marktsuche (`/api/marketsearch/markets`) antwortet der Preisfuchs-Kennung. **Aber:** Die Angebote je Markt (`/api/offers?marketId=…`) antworten ihr am 2026-09-13 mit HTTP 403 und der Meldung *„haha! better luck next time 😜“*. EDEKA sperrt Programme dort also absichtlich aus. Durchgekommen wäre nur mit kopierten Browser-Cookies – das hieße, die Sperre zu umgehen. |
 | **PENNY** | ❌ | Angebote kommen erst nach Marktauswahl über eine interne Schnittstelle. Die Nutzungsbedingungen der PENNY App verbieten den Zugriff „zum Auslesen oder Speichern von Daten“ – das spricht klar gegen ein Auslesen. |
-| **Lidl** | ❌ | Lebensmittel-Angebote gibt es nur als Prospekt (Bilder). `robots.txt` sperrt `/user-api/` und Such-/ID-Parameter. |
+| **Lidl** | ✅ **teilweise umgesetzt** (geprüft 2026-09-13) | `lidl.de/robots.txt` erlaubt die Prospektübersicht `/c/online-prospekte/…` (gesperrt sind nur `/user-api/` und Such-/ID-Parameter). Der Prospektdienst `endpoints.leaflets.schwarz` hat keine `robots.txt`; beide antworten der Preisfuchs-Kennung. Das Impressum (`/c/impressum/s10005238`) enthält keine Nutzungseinschränkung. Der Prospekt liefert je Woche rund 150–170 Artikel mit Titel, Marke, Preis und Beschreibung – **aber nur Getränke (Wein, Bier, Spirituosen) und Non-Food**. Lebensmittel stehen nur als Bild im Prospekt; die liest die App nicht. |
 | **Netto Marken-Discount** | ❌ | Die Angebotsseite antwortet dem Preisfuchs-`User-Agent` mit HTTP 403. |
 | **NORMA** | ❌ | Impressum: *„Eine Verwendung von Teilen der Website bedarf einer ausdrücklichen Zustimmung“*. |
 
@@ -59,10 +60,10 @@ Preisfuchs-Kennung antworteten EDEKA, ALDI SÜD und ALDI Nord normal.
 
 ---
 
-## So sind die drei Ketten eingebunden
+## So sind die vier Ketten eingebunden
 
-- **Wo:** `Packages/PriceCore/Sources/PriceData/KauflandOffersClient.swift`
-  und `AldiOffersClients.swift`; angezeigt über `Preisfuchs/Features/MarketOffers/`,
+- **Wo:** `Packages/PriceCore/Sources/PriceData/KauflandOffersClient.swift`,
+  `AldiOffersClients.swift` und `LidlOffersClient.swift`; angezeigt über `Preisfuchs/Features/MarketOffers/`,
   gesteuert von `Preisfuchs/Services/MarketOffersStore.swift`.
 - **Wann:** Beim Öffnen der Startseite, danach stündlich solange die App offen
   ist, beim Zurückkehren in die App und beim Herunterziehen. Kaufland und
@@ -93,11 +94,11 @@ Preisfuchs-Kennung antworteten EDEKA, ALDI SÜD und ALDI Nord normal.
 
 ## Die übrigen Ketten – und was die App stattdessen zeigt
 
-Für REWE, EDEKA, Lidl, PENNY, Netto und NORMA gibt es keinen erlaubten
-automatischen Abruf. Die Produktseite zeigt sie trotzdem, im Bereich
+Für REWE, EDEKA, PENNY, Netto und NORMA – und für Lebensmittel bei Lidl – gibt
+es keinen erlaubten automatischen Abruf. Die Produktseite zeigt sie trotzdem, im Bereich
 **„Preise nach Supermarkt“** – jede eingeschaltete Kette in einer Zeile:
 
-1. **Angebot direkt von der Kette** (Kaufland, ALDI Nord, ALDI SÜD), wenn eines
+1. **Angebot direkt von der Kette** (Kaufland, ALDI Nord, ALDI SÜD, Lidl), wenn eines
    streng zum Produkt passt;
 2. sonst der **günstigste aktuelle Preis aus Open Prices** für diese Kette –
    bevorzugt aus der Umgebung, sonst aus ganz Deutschland, immer mit Ort und
@@ -115,10 +116,9 @@ steht er allen zur Verfügung.
 Die Startseite verlinkt die offiziellen Angebotsseiten zusätzlich unter
 „Prospekte der Märkte“.
 
-Nicht eingebunden, obwohl technisch auffindbar: Lidls Prospekt-Viewer lädt
-Produktdaten über `endpoints.leaflets.schwarz`, EDEKAs Website Angebote je
-Markt über `/api/offers`. Beides sind interne Schnittstellen der Seiten, nicht
-für andere Apps veröffentlicht; eine Freigabe liegt nicht vor.
+Nicht eingebunden: EDEKAs Angebote je Markt (`/api/offers`). Die Schnittstelle
+sperrt Programme ausdrücklich aus (HTTP 403, siehe Tabelle); eine Umgehung
+kommt nicht in Frage.
 
 Für vollständige, filialgenaue Händlerpreise bräuchte es eine **Vereinbarung
 mit den Ketten** (Datenlizenz) – in der Regel nicht kostenlos. Kostenlos wächst

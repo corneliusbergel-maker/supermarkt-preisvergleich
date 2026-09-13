@@ -2,10 +2,11 @@ import Foundation
 
 /// Offizielle Angebotsseiten der Ketten.
 ///
-/// Nur Links. Die Angebote von Kaufland, ALDI Nord und ALDI SÜD lädt die App
-/// zusätzlich direkt (`MarketOffersStore`); die übrigen Ketten erlauben das
-/// nicht oder geben ihre Angebote nur nach Marktauswahl heraus – Einzelheiten
-/// in `DATENQUELLEN-SUPERMAERKTE.md`.
+/// Nur Links. Die Angebote von Kaufland, ALDI Nord, ALDI SÜD und – soweit der
+/// Prospekt sie strukturiert liefert – Lidl lädt die App zusätzlich direkt
+/// (`MarketOffersStore`); die übrigen Ketten erlauben das nicht oder geben ihre
+/// Angebote nur nach Marktauswahl heraus – Einzelheiten in
+/// `DATENQUELLEN-SUPERMAERKTE.md`.
 ///
 /// Jede Adresse wurde am 2026-09-12 geprüft; der Kommentar nennt, worauf sie
 /// führte. Ändert eine Kette ihre Adresse, landet der Link schlimmstenfalls

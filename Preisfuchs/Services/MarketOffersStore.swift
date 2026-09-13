@@ -3,8 +3,8 @@ import Observation
 import PriceCore
 import PriceData
 
-/// Hält die Angebote, die direkt von den Ketten kommen: Kaufland, ALDI Nord
-/// und ALDI SÜD.
+/// Hält die Angebote, die direkt von den Ketten kommen: Kaufland, ALDI Nord,
+/// ALDI SÜD und Lidl.
 ///
 /// Liegt in der App-Umgebung, damit Startseite und Angebotsliste dieselben
 /// Daten zeigen und keine Seite doppelt geladen wird. Jede Kette hat ihren
@@ -51,6 +51,7 @@ final class MarketOffersStore {
         let kaufland = KauflandOffersClient(transport: transport)
         let aldiNord = AldiNordOffersClient(transport: transport)
         let aldiSued = AldiSuedOffersClient(transport: transport)
+        let lidl = LidlOffersClient(transport: transport)
 
         return MarketOffersStore(sources: [
             Source(settingsName: "Kaufland",
@@ -72,7 +73,15 @@ final class MarketOffersStore {
                    host: "aldi-sued.de",
                    pageURL: AldiSuedOffersClient.pageURL,
                    minimumAge: 59 * 60,
-                   load: { try await aldiSued.offers() })
+                   load: { try await aldiSued.offers() }),
+            // Übersichtsseite plus bis zu drei Prospekte – höchstens stündlich.
+            // Nur Non-Food und Getränke; Lebensmittel stehen bei Lidl nur als Bild.
+            Source(settingsName: "Lidl",
+                   displayName: LidlOffersClient.retailerName,
+                   host: "lidl.de",
+                   pageURL: LidlOffersClient.pageURL,
+                   minimumAge: 59 * 60,
+                   load: { try await lidl.offers() })
         ])
     }
 

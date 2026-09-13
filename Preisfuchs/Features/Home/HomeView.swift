@@ -354,9 +354,9 @@ struct HomeView: View {
                 }
 
                 Text("Die Angebote stehen tagesaktuell auf den Seiten der Märkte. Die von "
-                     + "Kaufland, ALDI Nord und ALDI SÜD holt Preisfuchs direkt in die App; "
-                     + "die übrigen Ketten erlauben das nicht oder geben ihre Angebote nur "
-                     + "nach Marktauswahl heraus.")
+                     + "Kaufland, ALDI Nord und ALDI SÜD sowie Getränke und Non-Food aus dem "
+                     + "Lidl-Prospekt holt Preisfuchs direkt in die App; die übrigen Ketten "
+                     + "erlauben das nicht oder geben ihre Angebote nur nach Marktauswahl heraus.")
                     .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)

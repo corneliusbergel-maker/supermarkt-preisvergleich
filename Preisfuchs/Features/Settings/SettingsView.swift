@@ -187,17 +187,17 @@ struct SettingsView: View {
             attributionRow(source: "© OpenStreetMap-Mitwirkende",
                            purpose: "Filialen, Adressen, Öffnungszeiten",
                            license: "ODbL")
-            attributionRow(source: "Kaufland, ALDI Nord, ALDI SÜD",
-                           purpose: "Angebote von den öffentlichen Angebotsseiten",
+            attributionRow(source: "Kaufland, ALDI Nord, ALDI SÜD, Lidl",
+                           purpose: "Angebote von den öffentlichen Angebotsseiten und Prospekten",
                            license: "© der Ketten")
         } header: {
             Text("Datenquellen")
         } footer: {
             Text("Preise und Produkte kommen aus offenen Datenquellen. Händler-Websites "
-                 + "sind nur die Angebotsseiten von Kaufland, ALDI Nord und ALDI SÜD – die "
-                 + "übrigen Ketten erlauben das Auslesen nicht oder geben ihre Angebote nur "
-                 + "nach Marktauswahl heraus. Es werden keine kostenpflichtigen Preisdienste "
-                 + "verwendet.")
+                 + "sind nur die Angebotsseiten von Kaufland, ALDI Nord und ALDI SÜD sowie "
+                 + "der Lidl-Prospekt (Getränke und Non-Food) – die übrigen Ketten erlauben "
+                 + "das Auslesen nicht oder geben ihre Angebote nur nach Marktauswahl heraus. "
+                 + "Es werden keine kostenpflichtigen Preisdienste verwendet.")
         }
         .listRowBackground(Theme.surface)
     }

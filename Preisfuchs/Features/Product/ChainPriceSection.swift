@@ -4,9 +4,10 @@ import PriceCore
 /// „Preise nach Supermarkt“: jede eingeschaltete Kette mit dem günstigsten
 /// bekannten Preis für dieses Produkt – samt Herkunft und nächster Filiale.
 ///
-/// Für REWE, EDEKA, Lidl, PENNY, Netto und NORMA gibt es keinen erlaubten
-/// automatischen Abruf. Ihre Preise kommen von Menschen, die sie bei Open
-/// Prices eintragen. Die Zeile sagt das, statt still leer zu bleiben.
+/// Für REWE, EDEKA, PENNY, Netto und NORMA – und für Lebensmittel bei Lidl –
+/// gibt es keinen erlaubten automatischen Abruf. Ihre Preise kommen von
+/// Menschen, die sie bei Open Prices eintragen. Die Zeile sagt das, statt still
+/// leer zu bleiben.
 struct ChainPriceSection: View {
 
     let rows: [ProductDetailViewModel.ChainPrice]
@@ -28,10 +29,11 @@ struct ChainPriceSection: View {
                 }
             }
 
-            Text("Kaufland, ALDI Nord und ALDI SÜD: Angebote direkt von der Kette, über Marke, "
-                 + "Artikelname und Packungsgröße zugeordnet; einzelne Märkte können abweichen. "
-                 + "Alle anderen Preise haben Menschen bei Open Prices eingetragen – für REWE, "
-                 + "EDEKA, Lidl, PENNY, Netto und NORMA ist das der einzige erlaubte Weg.")
+            Text("Kaufland, ALDI Nord, ALDI SÜD und Lidl: Angebote direkt von der Kette – bei "
+                 + "Lidl nur Getränke und Non-Food aus dem Prospekt –, über Marke, Artikelname "
+                 + "und Packungsgröße zugeordnet; einzelne Märkte können abweichen. Alle anderen "
+                 + "Preise haben Menschen bei Open Prices eingetragen – für REWE, EDEKA, PENNY, "
+                 + "Netto, NORMA und Lebensmittel bei Lidl ist das der einzige erlaubte Weg.")
                 .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
