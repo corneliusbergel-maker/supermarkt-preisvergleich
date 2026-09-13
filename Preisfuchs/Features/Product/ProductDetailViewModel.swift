@@ -347,17 +347,21 @@ final class ProductDetailViewModel {
             var store: Store?
             var distance: Double?
             if let coordinate {
-                if case .openPrices(let observation)? = source, let observed = observation.store {
-                    let meters = GeoDistance.straightLineMeters(from: coordinate, to: observed.coordinate)
-                    if meters <= 25_000 {
-                        store = observed
-                        distance = meters
-                    }
+                if case .openPrices(let observation)? = source,
+                   let observed = observation.store,
+                   let meters = GeoDistance.straightLineMeters(from: coordinate, to: observed.coordinate),
+                   meters <= 25_000 {
+                    store = observed
+                    distance = meters
                 }
                 if store == nil {
+                    // Filialen ohne berechenbare Entfernung zählen nicht als „nächste“.
                     let nearest = stores
                         .filter { key($0.retailer.name) == chainKey }
-                        .map { ($0, GeoDistance.straightLineMeters(from: coordinate, to: $0.coordinate)) }
+                        .compactMap { candidate -> (Store, Double)? in
+                            GeoDistance.straightLineMeters(from: coordinate, to: candidate.coordinate)
+                                .map { (candidate, $0) }
+                        }
                         .min { $0.1 < $1.1 }
                     store = nearest?.0
                     distance = nearest?.1
