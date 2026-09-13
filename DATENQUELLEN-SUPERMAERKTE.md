@@ -50,6 +50,8 @@ Preisfuchs-Kennung antworteten EDEKA, ALDI SÜD und ALDI Nord normal.
 | **Netto Marken-Discount** | ❌ | Die Angebotsseite antwortet dem Preisfuchs-`User-Agent` mit HTTP 403. |
 | **NORMA** | ❌ | Impressum: *„Eine Verwendung von Teilen der Website bedarf einer ausdrücklichen Zustimmung“*. |
 | **dm** | ❌ (geprüft 2026-09-13) | `robots.txt` sperrt `/search`. Preise zu einem Produkt ließen sich nur über die Suche finden – die Such-Schnittstelle auf einem anderen Server zu nutzen, hieße, diese Sperre zu umgehen. |
+| **tegut** | ❌ (geprüft 2026-09-13) | `robots.txt` erlaubt fast alles, das Impressum schränkt nichts ein, die Angebotsseite antwortet der Preisfuchs-Kennung. **Aber:** Sie enthält keinen einzigen Preis – Angebote gibt es erst nach einer Marktsuche per Formular, und dann als Prospekt. Nichts Maschinenlesbares ohne Nachbau der Seitenlogik. |
+| **Globus** | ❌ (geprüft 2026-09-13) | `robots.txt` sperrt nur Shop-Bereiche. Die Prospekte liegen je Markt (`/<markt>/aktuelles-prospekt.php`), ohne Preise im Seitentext. |
 | **Rossmann** | ❌ (geprüft 2026-09-13) | `robots.txt` sperrt Suche und alle Adressen mit Parametern und schließt ausdrücklich `ClaudeBot` und `Claude-Web` von der ganzen Seite aus. Nicht weiter abgerufen. |
 
 ### Was es sonst gibt – und warum es nicht passt
