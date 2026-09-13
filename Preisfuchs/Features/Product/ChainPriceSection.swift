@@ -160,11 +160,10 @@ struct ChainPriceSection: View {
     @ViewBuilder
     private func storeLine(_ row: ProductDetailViewModel.ChainPrice) -> some View {
         if let store = row.nearestStore {
-            Text("Filiale: \(store.displayName)"
-                 + (row.distanceMeters.map { " · \(GeoDistance.formatted(meters: $0))" } ?? ""))
+            Text(Self.storeText(row, store: store))
                 .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -190,19 +189,37 @@ struct ChainPriceSection: View {
 
         case .openPrices(let observation)?:
             var parts = ["Open Prices"]
-            if let city = observation.store?.city, !city.isEmpty {
+            let city = observation.store?.city.flatMap { $0.isEmpty ? nil : $0 }
+            if row.isRemote {
+                parts.append("Preis aus \(city ?? "einer anderen Region")")
+            } else if let city {
                 parts.append(city)
             }
             let days = observation.ageInDays(asOf: now)
             parts.append(days <= 0 ? "heute" : (days == 1 ? "gestern" : "vor \(days) Tagen"))
-            if !row.isCurrent {
+            if observation.confidence(asOf: now) < .medium {
                 parts.append("möglicherweise veraltet")
             }
             return parts.joined(separator: " · ")
 
         case nil:
-            return "Noch kein Preis bekannt – bisher hat ihn niemand eingetragen."
+            return row.hasDirectOffers
+                ? "Gerade kein passendes Angebot und noch kein eingetragener Preis."
+                : "Noch kein Preis bekannt – bisher hat ihn niemand eingetragen."
         }
+    }
+
+    /// Welche Filiale gemeint ist – und ob der Preis dort belegt ist.
+    static func storeText(_ row: ProductDetailViewModel.ChainPrice, store: Store) -> String {
+        var text = row.storeHasPrice ? "Filiale mit Beleg: " : "Nächste Filiale: "
+        text += store.displayName
+        if let meters = row.distanceMeters {
+            text += " · " + GeoDistance.formatted(meters: meters)
+        }
+        if row.isRemote {
+            text += " – Preis dort nicht belegt"
+        }
+        return text
     }
 
     private static let dayFormatter: DateFormatter = {

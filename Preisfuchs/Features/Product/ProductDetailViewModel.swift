@@ -101,8 +101,16 @@ final class ProductDetailViewModel {
         let distanceMeters: Double?
         /// Offizielle Angebotsseite, soweit bekannt.
         let offersPage: URL?
-        /// Aktuell genug, um als günstigster Supermarkt zu gelten.
+        /// Aktuell genug und aus der Nähe – nur dann zählt der Preis als
+        /// günstigster Supermarkt.
         let isCurrent: Bool
+        /// Der Preis ist in einer weit entfernten Filiale belegt, etwa in einer
+        /// anderen Stadt. Für die Filiale hier sagt er nichts.
+        let isRemote: Bool
+        /// `nearestStore` ist die Filiale, in der der Preis belegt ist.
+        let storeHasPrice: Bool
+        /// Die Kette veröffentlicht Angebote, die die App direkt liest.
+        let hasDirectOffers: Bool
 
         var id: String { chainName }
     }
@@ -259,9 +267,11 @@ final class ProductDetailViewModel {
         let coordinate = environment.activeCoordinate
         let marketStore = environment.marketOffers
         let sources = marketStore.enabledSources(settings)
+        let direct = Set(sources.compactMap { RetailerRegistry.identifier(forBrand: $0.settingsName) })
 
         chainPrices = makeChainPrices(offers: marketStore.currentOffers(from: sources),
-                                      stores: [], settings: settings, coordinate: coordinate)
+                                      stores: [], settings: settings, coordinate: coordinate,
+                                      directOfferChains: direct)
 
         // Aus dem gemeinsamen Speicher: Hat die Startseite die Angebote gerade
         // geladen, kostet das keinen weiteren Abruf.
@@ -269,23 +279,34 @@ final class ProductDetailViewModel {
         guard !Task.isCancelled else { return }
         let offers = marketStore.currentOffers(from: sources)
         chainPrices = makeChainPrices(offers: offers, stores: [], settings: settings,
-                                      coordinate: coordinate)
+                                      coordinate: coordinate, directOfferChains: direct)
 
         guard let coordinate,
               let stores = try? await environment.stores.stores(near: coordinate,
                                                                 radiusKm: storeRadiusKm),
               !Task.isCancelled else { return }
         chainPrices = makeChainPrices(offers: offers, stores: stores, settings: settings,
-                                      coordinate: coordinate)
+                                      coordinate: coordinate, directOfferChains: direct)
     }
 
     func makeChainPrices(offers: [RetailerOffer],
                          stores: [Store],
                          settings: AppSettings,
                          coordinate: Coordinate?,
+                         directOfferChains: Set<String> = [],
                          now: Date = Date()) -> [ChainPrice] {
         let product = displayProduct
         func key(_ name: String?) -> String? { RetailerRegistry.identifier(forBrand: name) }
+
+        /// Liegt die Filiale des Belegs in der Nähe? Ohne Bezugspunkt sucht die
+        /// App ohnehin in ganz Deutschland – dann gilt jeder Beleg als nah.
+        func isNearby(_ observation: PriceObservation) -> Bool {
+            guard let coordinate else { return true }
+            guard let observed = observation.store,
+                  let meters = GeoDistance.straightLineMeters(from: coordinate, to: observed.coordinate)
+            else { return false }
+            return meters <= 25_000
+        }
 
         var seen = Set<String>()
         let observations = (nearbyObservations + historyObservations)
@@ -318,7 +339,9 @@ final class ProductDetailViewModel {
 
             let chainObservations = observations.filter { key($0.retailer?.name) == chainKey }
             let currentObservations = chainObservations.filter { $0.confidence(asOf: now) >= .medium }
-            let bestObservation = currentObservations.min { $0.price.amount < $1.price.amount }
+            // Belege aus der Nähe zuerst, dann aus ganz Deutschland, dann ältere.
+            let bestObservation = currentObservations.filter(isNearby).min { $0.price.amount < $1.price.amount }
+                ?? currentObservations.min { $0.price.amount < $1.price.amount }
                 ?? chainObservations.max { $0.observedOn < $1.observedOn }
 
             var source: ChainPrice.Source?
@@ -328,7 +351,7 @@ final class ProductDetailViewModel {
             // Ein gültiges Angebot schlägt einen älteren oder teureren Beleg.
             if let best = bestOffer, let offerPrice = best.0.price {
                 let observationIsBetter = bestObservation.map {
-                    $0.confidence(asOf: now) >= .medium && $0.price.amount < offerPrice.amount
+                    $0.confidence(asOf: now) >= .medium && isNearby($0) && $0.price.amount < offerPrice.amount
                 } ?? false
                 if !observationIsBetter {
                     source = .marketOffer(best.0, viaVariety: best.1 == .matches(viaVariety: true))
@@ -336,16 +359,21 @@ final class ProductDetailViewModel {
                     isCurrent = true
                 }
             }
+            var isRemote = false
             if source == nil, let observation = bestObservation {
                 source = .openPrices(observation)
                 price = observation.price
-                isCurrent = observation.confidence(asOf: now) >= .medium
+                isRemote = !isNearby(observation)
+                // Ein Preis aus einer anderen Stadt belegt nichts für die Filiale
+                // hier – er darf nicht als günstigster Supermarkt erscheinen.
+                isCurrent = observation.confidence(asOf: now) >= .medium && !isRemote
             }
 
             // Die richtige Filiale: die mit dem Beleg, wenn sie in der Nähe liegt,
             // sonst die nächste Filiale der Kette.
             var store: Store?
             var distance: Double?
+            var storeHasPrice = false
             if let coordinate {
                 if case .openPrices(let observation)? = source,
                    let observed = observation.store,
@@ -353,6 +381,7 @@ final class ProductDetailViewModel {
                    meters <= 25_000 {
                     store = observed
                     distance = meters
+                    storeHasPrice = true
                 }
                 if store == nil {
                     // Filialen ohne berechenbare Entfernung zählen nicht als „nächste“.
@@ -374,7 +403,10 @@ final class ProductDetailViewModel {
                               nearestStore: store,
                               distanceMeters: distance,
                               offersPage: RetailerOffersPages.all.first { $0.name == name }?.url,
-                              isCurrent: isCurrent)
+                              isCurrent: isCurrent,
+                              isRemote: isRemote,
+                              storeHasPrice: storeHasPrice,
+                              hasDirectOffers: directOfferChains.contains(chainKey))
         }
 
         // Aktuelle Preise aufsteigend, dann ältere, dann Ketten ohne Preis –

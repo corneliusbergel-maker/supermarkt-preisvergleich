@@ -100,7 +100,10 @@ automatischen Abruf. Die Produktseite zeigt sie trotzdem, im Bereich
 1. **Angebot direkt von der Kette** (Kaufland, ALDI Nord, ALDI SÜD), wenn eines
    streng zum Produkt passt;
 2. sonst der **günstigste aktuelle Preis aus Open Prices** für diese Kette –
-   aus der Umgebung oder aus ganz Deutschland, mit Ort und Alter;
+   bevorzugt aus der Umgebung, sonst aus ganz Deutschland, immer mit Ort und
+   Alter. Ein Preis aus einer über 25 km entfernten Filiale steht als
+   „Preis aus <Ort>“ da, mit dem Zusatz „Preis dort nicht belegt“ an der
+   nächsten Filiale – und zählt nie als günstigster Supermarkt;
 3. sonst ein älterer Preis, als „möglicherweise veraltet“ gekennzeichnet;
 4. sonst „Noch kein Preis bekannt“ und der Link zum offiziellen Prospekt.
 
