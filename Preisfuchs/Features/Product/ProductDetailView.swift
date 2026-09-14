@@ -54,9 +54,7 @@ struct ProductDetailView: View {
                 // der belegten Preise aus Open Prices.
                 if !model.chainPrices.isEmpty {
                     ChainPriceSection(rows: model.chainPrices,
-                                      canContribute: model.displayProduct.barcode != nil,
-                                      onRoute: { routeTarget = $0 },
-                                      onContribute: { isContributing = true })
+                                      onRoute: { routeTarget = $0 })
                 }
                 priceSection
             }
@@ -269,7 +267,6 @@ struct ProductDetailView: View {
                 }
             }
             packSizeSection(referenceUnitPrice: offers.first?.unitPrice)
-            contributeLink
             sourceNote
         }
     }
@@ -492,16 +489,10 @@ struct ProductDetailView: View {
                     ? "Keine Preisdaten in deiner Nähe"
                     : "Keine Preisdaten aus Deutschland",
                 message: (appEnvironment.hasLocation
-                    ? "Im gewählten Umkreis liegt für dieses Produkt kein belegter Preis vor. "
-                    : "Für dieses Produkt ist in Deutschland noch kein belegter Preis erfasst. ")
-                       + "Die Preisdatenbank wird von Menschen gefüllt – wenn du den "
-                       + "Preis im Markt siehst, kannst du ihn beitragen.",
-                // Ohne Barcode lässt sich ein Preis nicht zuordnen; dann wird
-                // der Knopf gar nicht erst angeboten.
-                actionTitle: model.displayProduct.barcode == nil ? nil : "Preis beitragen"
-            ) {
-                isContributing = true
-            }
+                    ? "Im gewählten Umkreis kennt Open Prices für dieses Produkt keinen Preis. "
+                    : "Open Prices kennt für dieses Produkt keinen Preis aus Deutschland. ")
+                       + "Die Preise direkt von den Ketten stehen oben unter „Preise nach Supermarkt“."
+            )
             .frame(maxWidth: .infinity)
         }
     }

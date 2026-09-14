@@ -2,18 +2,16 @@ import SwiftUI
 import PriceCore
 
 /// „Preise nach Supermarkt“: jede eingeschaltete Kette mit dem günstigsten
-/// bekannten Preis für dieses Produkt – samt Herkunft und nächster Filiale.
+/// Preis, den die App automatisch gefunden hat – samt Herkunft und Filiale.
 ///
-/// Für REWE, EDEKA, PENNY, Netto und NORMA – und für Lebensmittel bei Lidl –
-/// gibt es keinen erlaubten automatischen Abruf. Ihre Preise kommen von
-/// Menschen, die sie bei Open Prices eintragen. Die Zeile sagt das, statt still
-/// leer zu bleiben.
+/// Alle Preise kommen aus dem Internet: Angebote und Sortiment direkt von den
+/// Ketten, die das zulassen, sonst die offene Preisdatenbank Open Prices.
+/// REWE, EDEKA, PENNY, Netto und NORMA sperren automatische Abrufe; findet sich
+/// dort nichts, sagt die Zeile das, statt einen Preis zu erfinden.
 struct ChainPriceSection: View {
 
     let rows: [ProductDetailViewModel.ChainPrice]
-    let canContribute: Bool
     let onRoute: (Store) -> Void
-    let onContribute: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
@@ -29,23 +27,14 @@ struct ChainPriceSection: View {
                 }
             }
 
-            Text("Kaufland, ALDI Nord, ALDI SÜD und Lidl: Angebote direkt von der Kette – bei "
-                 + "Lidl nur Getränke und Non-Food aus dem Prospekt –, über Marke, Artikelname "
-                 + "und Packungsgröße zugeordnet; einzelne Märkte können abweichen. Alle anderen "
-                 + "Preise haben Menschen bei Open Prices eingetragen – für REWE, EDEKA, PENNY, "
-                 + "Netto, NORMA und Lebensmittel bei Lidl ist das der einzige erlaubte Weg.")
+            Text("Automatisch aus dem Internet: Angebote von Kaufland, ALDI Nord, ALDI SÜD und "
+                 + "Lidl (bei Lidl nur Getränke und Non-Food), Regalpreise aus dem ALDI-SÜD-"
+                 + "Sortiment (täglich) und die offene Preisdatenbank Open Prices. Zugeordnet "
+                 + "über Marke, Artikelname und Packungsgröße; einzelne Märkte können abweichen. "
+                 + "REWE, EDEKA, PENNY, Netto und NORMA sperren automatische Abrufe.")
                 .font(.caption)
                 .foregroundStyle(Theme.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
-
-            if canContribute {
-                Button(action: onContribute) {
-                    Label("Preis aus dem Markt beitragen", systemImage: "plus.viewfinder")
-                        .font(.cardBody)
-                        .foregroundStyle(Theme.accent)
-                }
-                .buttonStyle(.plain)
-            }
         }
     }
 
@@ -175,15 +164,20 @@ struct ChainPriceSection: View {
     static func sourceText(_ row: ProductDetailViewModel.ChainPrice, now: Date = Date()) -> String {
         switch row.source {
         case .marketOffer(let offer, let viaVariety)?:
-            let host = (offer.sourceURL.host ?? offer.retailerName)
-                .replacingOccurrences(of: "www.", with: "")
-                .replacingOccurrences(of: "filiale.", with: "")
-            var parts = ["Angebot laut \(host)"]
+            var parts = ["Angebot laut \(host(of: offer))"]
             if let validTo = offer.validTo {
                 parts.append("gültig bis \(dayFormatter.string(from: validTo))")
             } else {
                 parts.append("verfügbar seit \(dayFormatter.string(from: offer.validFrom))")
             }
+            if viaVariety {
+                parts.append("für mehrere Sorten")
+            }
+            return parts.joined(separator: " · ")
+
+        case .catalogPrice(let item, let viaVariety)?:
+            var parts = ["Regalpreis laut \(host(of: item))",
+                         "Stand \(dayFormatter.string(from: item.validFrom))"]
             if viaVariety {
                 parts.append("für mehrere Sorten")
             }
@@ -206,8 +200,8 @@ struct ChainPriceSection: View {
 
         case nil:
             return row.hasDirectOffers
-                ? "Gerade kein passendes Angebot und noch kein eingetragener Preis."
-                : "Noch kein Preis bekannt – bisher hat ihn niemand eingetragen."
+                ? "Kein passender Preis gefunden – weder im Angebot noch im Sortiment der Kette."
+                : "Kein Preis gefunden – die Kette sperrt automatische Abrufe."
         }
     }
 
@@ -222,6 +216,12 @@ struct ChainPriceSection: View {
             text += " – Preis dort nicht belegt"
         }
         return text
+    }
+
+    private static func host(of offer: RetailerOffer) -> String {
+        (offer.sourceURL.host ?? offer.retailerName)
+            .replacingOccurrences(of: "www.", with: "")
+            .replacingOccurrences(of: "filiale.", with: "")
     }
 
     private static let dayFormatter: DateFormatter = {

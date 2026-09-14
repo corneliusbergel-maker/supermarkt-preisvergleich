@@ -97,6 +97,12 @@ struct RootView: View {
         // Stündlich neu laden, solange die App offen ist – und beim
         // Zurückkehren, wenn der letzte Stand älter als eine Stunde ist.
         .task { await appEnvironment.runHourlyRefresh() }
+        // Regalpreise von ALDI SÜD: höchstens täglich, langsam im Hintergrund,
+        // nach einem Abbruch an derselben Stelle weiter.
+        .task(id: appEnvironment.refreshTick) {
+            guard appEnvironment.settings.isEnabled(retailerNamed: "Aldi Süd") else { return }
+            await appEnvironment.sortiment.refreshIfNeeded()
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { appEnvironment.refreshIfStale() }
         }

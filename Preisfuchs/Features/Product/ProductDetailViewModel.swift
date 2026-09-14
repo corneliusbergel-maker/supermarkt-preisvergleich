@@ -88,6 +88,8 @@ final class ProductDetailViewModel {
         enum Source {
             /// Angebot direkt von der Kette, über `OfferMatcher` streng zugeordnet.
             case marketOffer(RetailerOffer, viaVariety: Bool)
+            /// Regalpreis aus dem Sortiment der Kette (bisher ALDI SÜD), ebenso zugeordnet.
+            case catalogPrice(RetailerOffer, viaVariety: Bool)
             /// Von Menschen bei Open Prices eingetragen.
             case openPrices(PriceObservation)
         }
@@ -270,6 +272,7 @@ final class ProductDetailViewModel {
         let direct = Set(sources.compactMap { RetailerRegistry.identifier(forBrand: $0.settingsName) })
 
         chainPrices = makeChainPrices(offers: marketStore.currentOffers(from: sources),
+                                      catalog: environment.sortiment.items,
                                       stores: [], settings: settings, coordinate: coordinate,
                                       directOfferChains: direct)
 
@@ -278,18 +281,21 @@ final class ProductDetailViewModel {
         await marketStore.refresh(sources)
         guard !Task.isCancelled else { return }
         let offers = marketStore.currentOffers(from: sources)
-        chainPrices = makeChainPrices(offers: offers, stores: [], settings: settings,
+        chainPrices = makeChainPrices(offers: offers, catalog: environment.sortiment.items,
+                                      stores: [], settings: settings,
                                       coordinate: coordinate, directOfferChains: direct)
 
         guard let coordinate,
               let stores = try? await environment.stores.stores(near: coordinate,
                                                                 radiusKm: storeRadiusKm),
               !Task.isCancelled else { return }
-        chainPrices = makeChainPrices(offers: offers, stores: stores, settings: settings,
+        chainPrices = makeChainPrices(offers: offers, catalog: environment.sortiment.items,
+                                      stores: stores, settings: settings,
                                       coordinate: coordinate, directOfferChains: direct)
     }
 
     func makeChainPrices(offers: [RetailerOffer],
+                         catalog: [RetailerOffer] = [],
                          stores: [Store],
                          settings: AppSettings,
                          coordinate: Coordinate?,
@@ -319,6 +325,18 @@ final class ProductDetailViewModel {
             return result.isMatch ? (offer, result) : nil
         }
 
+        // Regalpreise: erst grob nach Markenwort vorsortiert – das Sortiment hat
+        // Tausende Artikel, der strenge Abgleich ist dafür zu teuer.
+        let brandWords = (product.brand ?? "")
+            .split(separator: ",")
+            .flatMap { ProductTextNormalizer.brandTokens(String($0)) }
+        let matchedCatalog = catalog.compactMap { item -> (RetailerOffer, OfferMatcher.Result)? in
+            let title = ProductTextNormalizer.normalize(item.title)
+            guard brandWords.contains(where: { title.contains($0) }) else { return nil }
+            let result = OfferMatcher.match(product, item)
+            return result.isMatch ? (item, result) : nil
+        }
+
         var names = AppSettings.selectableRetailers.filter { settings.isEnabled(retailerNamed: $0) }
         // Weitere Märkte, für die Open Prices einen Preis kennt – etwa Globus.
         if settings.includeOtherRetailers {
@@ -336,6 +354,9 @@ final class ProductDetailViewModel {
             let bestOffer = matchedOffers
                 .filter { key($0.0.retailerName) == chainKey }
                 .min { ($0.0.price?.amount ?? 0) < ($1.0.price?.amount ?? 0) }
+            let bestShelf = matchedCatalog
+                .filter { key($0.0.retailerName) == chainKey }
+                .min { ($0.0.price?.amount ?? 0) < ($1.0.price?.amount ?? 0) }
 
             let chainObservations = observations.filter { key($0.retailer?.name) == chainKey }
             let currentObservations = chainObservations.filter { $0.confidence(asOf: now) >= .medium }
@@ -348,14 +369,29 @@ final class ProductDetailViewModel {
             var price: Money?
             var isCurrent = false
 
-            // Ein gültiges Angebot schlägt einen älteren oder teureren Beleg.
+            // Direkt von der Kette: Angebot oder Regalpreis – der günstigere zählt,
+            // bei Gleichstand das Angebot.
+            var direct: (source: ChainPrice.Source, price: Money)?
             if let best = bestOffer, let offerPrice = best.0.price {
+                let viaVariety = best.1 == .matches(viaVariety: true)
+                direct = (source: ChainPrice.Source.marketOffer(best.0, viaVariety: viaVariety),
+                          price: offerPrice)
+            }
+            if let shelf = bestShelf, let shelfPrice = shelf.0.price,
+               direct.map({ shelfPrice.amount < $0.price.amount }) ?? true {
+                let viaVariety = shelf.1 == .matches(viaVariety: true)
+                direct = (source: ChainPrice.Source.catalogPrice(shelf.0, viaVariety: viaVariety),
+                          price: shelfPrice)
+            }
+
+            // Ein Preis direkt von der Kette schlägt einen älteren oder teureren Beleg.
+            if let direct {
                 let observationIsBetter = bestObservation.map {
-                    $0.confidence(asOf: now) >= .medium && isNearby($0) && $0.price.amount < offerPrice.amount
+                    $0.confidence(asOf: now) >= .medium && isNearby($0) && $0.price.amount < direct.price.amount
                 } ?? false
                 if !observationIsBetter {
-                    source = .marketOffer(best.0, viaVariety: best.1 == .matches(viaVariety: true))
-                    price = offerPrice
+                    source = direct.source
+                    price = direct.price
                     isCurrent = true
                 }
             }

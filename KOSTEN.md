@@ -68,6 +68,7 @@ App selbst, sondern Apples Vertriebsweg:
 | **Nutzung** | `robots.txt` erlaubt die Seite; Impressum ohne Nutzungseinschränkung (geprüft 2026-09-12) | `robots.txt` erlaubt Angebots- und Unterseiten (`?page=`); Impressum ohne Einschränkung, Nutzungsbedingungen betreffen nur das Kundenkonto (geprüft 2026-09-12) |
 | **Umfang je Abruf** | 2 Seiten (laufende und nächste Woche), komprimiert je rund 100 KB | Übersicht plus je Aktionstag 1–3 Seiten, zusammen bis zu rund 20 Abrufe à ~125 KB |
 | **Unsere Maßnahme** | Ehrlicher `User-Agent`, frühestens nach 10 Minuten erneut | Ehrlicher `User-Agent`, höchstens einmal pro Stunde, nur Aktionstage ±7 Tage, höchstens 6 Seiten je Tag |
+| **Sortiment (Regalpreise)** | – | 19 Kategorien `/produkte/<kategorie>/k/<id>`, rund 120 Seiten à ~130 KB. Höchstens einmal täglich, 2 Sekunden Pause zwischen den Seiten, Fortsetzung nach Abbruch, auf dem Gerät gespeichert |
 
 ### Lidl-Prospekt — 0 €
 

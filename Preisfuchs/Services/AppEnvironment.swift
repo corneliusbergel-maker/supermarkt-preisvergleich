@@ -27,6 +27,9 @@ final class AppEnvironment {
     /// Angebote direkt von den Ketten (Kaufland, ALDI Nord, ALDI SÜD, Lidl).
     let marketOffers: MarketOffersStore
 
+    /// Regalpreise aus dem ALDI-SÜD-Sortiment, höchstens täglich geladen.
+    let sortiment: SortimentStore
+
     /// Zeitpunkt der zuletzt angestoßenen Aktualisierung. Startseite und
     /// Favoriten hängen ihr Neuladen daran.
     private(set) var refreshTick = Date()
@@ -76,6 +79,7 @@ final class AppEnvironment {
         // Über denselben Transport: Ohne Netz zeigt die Liste den letzten Stand
         // und das Banner sagt, von wann er ist.
         self.marketOffers = MarketOffersStore.standard(transport: transport)
+        self.sortiment = SortimentStore(client: AldiSuedCatalogClient(transport: transport))
 
         // Overpass bleibt beim einfachen Transport: Es fragt per POST ab, und
         // POST wird bewusst nicht auf Platte gelegt. Die Filialen haben
