@@ -16,6 +16,7 @@
 | **PENNY** | Nutzungsbedingungen der PENNY App verbieten das Auslesen | Impressum: <https://www.penny.de/impressum> |
 | **Netto Marken-Discount** | Website antwortet Programmen mit HTTP 403 | Impressum auf <https://www.netto-online.de> |
 | **NORMA** | Impressum verlangt eine ausdrückliche Zustimmung | Impressum: <https://www.norma-online.de/de/impressum> |
+| **supermarktcheck.de** (Preise von Nutzern) | Nutzungsbedingungen verlangen für jede Vervielfältigung eine vorherige schriftliche Zustimmung | Impressum: <https://www.supermarktcheck.de/impressum/> |
 
 ---
 

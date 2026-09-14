@@ -61,6 +61,16 @@ Preisfuchs-Kennung antworteten EDEKA, ALDI SÜD und ALDI Nord normal.
 | **Kommerzielle Datenanbieter** (z. B. Pepesto) | Kostenpflichtig (widerspricht #51) und nach eigener Aussage selbst aus öffentlichen Shopseiten gewonnen, nicht lizenziert. |
 | **Undokumentierte App-Schnittstellen** | Nicht freigegeben, teils per Bot-Schutz gesichert – das zu umgehen kommt nicht in Frage. |
 | **Stündlicher Sammel-Server über GitHub Actions** | GitHub erlaubt auf seinen Runnern nur Tätigkeiten für Bau, Test, Bereitstellung und Veröffentlichung des Projekts. Die App lädt deshalb selbst, auf dem Gerät. |
+| **supermarktcheck.de** (Nutzer tragen Preise ein, geprüft 2026-09-14) | `robots.txt` erlaubt alles, aber die Nutzungsbedingungen verlangen für jede Vervielfältigung – *„auch auszugsweise“* – die *„vorherige schriftliche Zustimmung“*. Ohne diese Zustimmung nicht nutzbar; Anfrage-Vorlage in `ANFRAGEN-HAENDLER.md`. |
+| **supermarktcompare.de** (Preisvergleich, geprüft 2026-09-14) | `robots.txt` sperrt ausdrücklich `ClaudeBot`, `GPTBot` und weitere KI-Crawler; die Startseite antwortet der Preisfuchs-Kennung mit HTTP 410. Die Seite sammelt ihre Preise nach eigener Aussage selbst bei den Ketten. Nicht genutzt. |
+| **Apify-Schnittstellen, Daltix** | Kostenpflichtig (je Angebot bzw. Vertrag) und selbst durch Auslesen der Ketten gewonnen. Widerspricht #51. |
+
+**Filialgenaue Preise für alle Produkte, minütlich aktualisiert,** bietet damit
+keine frei nutzbare Quelle. Die Ketten veröffentlichen solche Daten nicht, die
+Sammelseiten verbieten die Übernahme oder sperren Programme, und die
+Datenanbieter kosten Geld. Minütliche Abrufe wären ohnehin nicht sinnvoll:
+Regalpreise ändern sich selten, Angebote wöchentlich – und so häufige Abrufe
+würden die Schutzsysteme der Seiten auslösen.
 
 ---
 
