@@ -60,13 +60,19 @@ public enum OfferMatcher {
             name: [articleName, offer.details].compactMap { $0 }.joined(separator: " "),
             brandTokens: brandWords
         )
-        guard !productName.isEmpty, !offerName.isEmpty else {
+        let isVariety = offersVarieties(offer)
+
+        // Nur die Marke als Name – „Coca Cola“ gegen „Cola Original 1,25 l“.
+        // Das passt nur, wenn auch der Artikelname des Angebots nichts außer
+        // Marke, Neutralwörtern und Menge enthält und die Menge exakt stimmt
+        // (siehe unten). „Coca-Cola 2 l, Zero“ bleibt so getrennt.
+        let brandOnly = productName.isEmpty && offerName.isEmpty && !isVariety
+        guard brandOnly || (!productName.isEmpty && !offerName.isEmpty) else {
             return .noMatch(reason: "Name zu unbestimmt")
         }
 
-        let isVariety = offersVarieties(offer)
-        let nameCovered = productName.isSubset(of: offerWords)
-        let varietyCovered = isVariety && offerName.isSubset(of: productName)
+        let nameCovered = brandOnly || productName.isSubset(of: offerWords)
+        let varietyCovered = !brandOnly && isVariety && offerName.isSubset(of: productName)
         guard nameCovered || varietyCovered else {
             return .noMatch(reason: "Anderer Artikel")
         }
@@ -87,7 +93,9 @@ public enum OfferMatcher {
         }
         guard quantity.dimension == range.dimension,
               quantity.totalInBaseUnit >= range.lower,
-              quantity.totalInBaseUnit <= range.upper else {
+              quantity.totalInBaseUnit <= range.upper,
+              // Ohne Namenswörter trägt allein die Menge – dann keine Spanne.
+              !brandOnly || range.lower == range.upper else {
             return .noMatch(reason: "Andere Packungsgröße")
         }
 

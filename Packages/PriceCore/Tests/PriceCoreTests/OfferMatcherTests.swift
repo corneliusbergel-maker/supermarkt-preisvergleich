@@ -128,6 +128,50 @@ final class OfferMatcherTests: XCTestCase {
         XCTAssertFalse(result.isMatch)
     }
 
+    // MARK: - Nur die Marke als Name (Sortiment ALDI SÜD, 2026-09-14)
+
+    /// Open Food Facts führt Coca-Cola oft nur als „Coca Cola“.
+    func testBrandOnlyNameMatchesGenericArticleOfSameSize() {
+        let result = OfferMatcher.match(
+            product("Coca-Cola", "Coca Cola", quantity("1.25", .liter)),
+            offer("COCA-COLA", "Cola Original 1,25 l", unit: "1,25 l")
+        )
+        XCTAssertEqual(result, .matches(viaVariety: false))
+    }
+
+    func testBrandOnlyNameNeedsTheExactSize() {
+        let result = OfferMatcher.match(
+            product("Coca-Cola", "Coca Cola", quantity("0.5", .liter)),
+            offer("COCA-COLA", "Cola Original 1,25 l", unit: "1,25 l")
+        )
+        XCTAssertFalse(result.isMatch)
+    }
+
+    func testBrandOnlyNameDoesNotMatchAVariant() {
+        let result = OfferMatcher.match(
+            product("Coca-Cola", "Coca Cola", quantity("2", .liter)),
+            offer("COCA-COLA", "Coca-Cola 2 l, Zero", unit: "2 l")
+        )
+        XCTAssertFalse(result.isMatch)
+    }
+
+    /// Eine Tafel mit Sortenangabe ist nicht „Milka“ schlechthin.
+    func testBrandOnlyNameDoesNotMatchASpecificArticle() {
+        let result = OfferMatcher.match(
+            product("Milka", "Milka", quantity("100", .gram)),
+            offer("MILKA", "Tafelschokolade 100 g, Joghurt", unit: "0,1 kg")
+        )
+        XCTAssertFalse(result.isMatch)
+    }
+
+    func testCatalogArticleWithSizeInNameMatches() {
+        let result = OfferMatcher.match(
+            product("Jacobs", "Krönung", quantity("500", .gram)),
+            offer("JACOBS", "Krönung 500 g", unit: "0,5 kg")
+        )
+        XCTAssertEqual(result, .matches(viaVariety: false))
+    }
+
     // MARK: - Packungsangaben
 
     func testPackageRangesAreReadInBaseUnits() {
